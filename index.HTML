@@ -106,6 +106,31 @@
         .editable-active {
             outline: 2px dashed #06b6d4; background: rgba(6, 182, 212, 0.05); padding: 2px 4px; border-radius: 4px;
         }
+        
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #10b981;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 antialiased">
@@ -117,10 +142,10 @@
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse-slow"></span>
                 <span class="text-xs font-mono text-cyan-500 tracking-wider">IMSY PRODUCTION SYSTEM v3.0</span>
             </div>
-            <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight editable-text">
+            <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight editable-text" data-id="main-title">
                 نظام إدارة مصنع <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">IMSY</span>
             </h1>
-            <p class="text-slate-400 mt-1 editable-text text-sm md:text-base">لوحة القيادة المركزية: مراقبة الأداء، الجودة، والعمليات التشغيلية</p>
+            <p class="text-slate-400 mt-1 editable-text text-sm md:text-base" data-id="main-subtitle">لوحة القيادة المركزية: مراقبة الأداء، الجودة، والعمليات التشغيلية</p>
         </div>
         
         <div class="flex items-center gap-3">
@@ -142,7 +167,7 @@
                 <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                     <span class="text-cyan-400">📊</span> نظرة عامة على الأداء
                 </h2>
-                <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed editable-text" data-id="radar-desc">
                     مقارنة حية لأداء الأقسام الخمسة الرئيسية. يوضح الرسم البياني نقاط القوة (القمم) وفرص التحسين (الانخفاضات) في الوقت الفعلي.
                 </p>
                 <div class="grid grid-cols-2 gap-4">
@@ -171,8 +196,8 @@
                 <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-2xl group-hover:bg-blue-500/20 transition text-blue-400">📐</div>
                 <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Engineering</div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">المكتب الفني</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2">التصميمات (CAD)، الرسومات التنفيذية (Shop Drawings)، وحصر المواد (BOM).</p>
+            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="tech-title">المكتب الفني</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="tech-desc">التصميمات (CAD)، الرسومات التنفيذية (Shop Drawings)، وحصر المواد (BOM).</p>
             <div class="flex items-center gap-2 text-xs font-mono text-blue-400">
                 <span>●</span> انقر للتفاصيل والتعديل
             </div>
@@ -184,8 +209,8 @@
                 <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-2xl group-hover:bg-orange-500/20 transition text-orange-400">⚙️</div>
                 <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Fabrication</div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">الإنتاج والتصنيع</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2">قص الليزر، التناية، الخراطة، الفريزة، والتجميع النهائي للماكينات.</p>
+            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="prod-title">الإنتاج والتصنيع</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="prod-desc">قص الليزر، التناية، الخراطة، الفريزة، والتجميع النهائي للماكينات.</p>
             <div class="flex items-center gap-2 text-xs font-mono text-orange-400">
                 <span>●</span> انقر للتفاصيل والتعديل
             </div>
@@ -197,8 +222,8 @@
                 <div class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-2xl group-hover:bg-green-500/20 transition text-green-400">🛡️</div>
                 <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">QC & QA</div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">مراقبة الجودة</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2">فحص الأبعاد، اختبارات الأداء الوظيفي، وتقارير عدم المطابقة (NCR).</p>
+            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="qual-title">مراقبة الجودة</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="qual-desc">فحص الأبعاد، اختبارات الأداء الوظيفي، وتقارير عدم المطابقة (NCR).</p>
             <div class="flex items-center gap-2 text-xs font-mono text-green-400">
                 <span>●</span> انقر للتفاصيل والتعديل
             </div>
@@ -210,8 +235,8 @@
                 <div class="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-2xl group-hover:bg-red-500/20 transition text-red-400">🔧</div>
                 <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Maintenance</div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">الصيانة والدعم</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2">الصيانة الوقائية (Preventive)، الإصلاح الطارئ، وتوافر قطع الغيار.</p>
+            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="maint-title">الصيانة والدعم</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="maint-desc">الصيانة الوقائية (Preventive)، الإصلاح الطارئ، وتوافر قطع الغيار.</p>
             <div class="flex items-center gap-2 text-xs font-mono text-red-400">
                 <span>●</span> انقر للتفاصيل والتعديل
             </div>
@@ -223,8 +248,8 @@
                 <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center text-2xl group-hover:bg-yellow-500/20 transition text-yellow-400">🦺</div>
                 <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Safety First</div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">السلامة والصحة المهنية</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2">الالتزام بمهمات الوقاية (PPE)، تحليل المخاطر، وسجلات الحوادث.</p>
+            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="safety-title">السلامة والصحة المهنية</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="safety-desc">الالتزام بمهمات الوقاية (PPE)، تحليل المخاطر، وسجلات الحوادث.</p>
             <div class="flex items-center gap-2 text-xs font-mono text-yellow-400">
                 <span>●</span> انقر للتفاصيل والتعديل
             </div>
@@ -233,8 +258,8 @@
         <!-- 6. HR & Admin -->
         <div class="glass-card p-6 group flex flex-col items-center justify-center border-dashed border-2 border-slate-700 bg-transparent hover:bg-slate-800/30">
             <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-2xl text-slate-500 mb-3 group-hover:text-white transition">📂</div>
-            <h3 class="text-lg font-bold text-slate-500 group-hover:text-white transition">تقارير الموارد البشرية</h3>
-            <p class="text-xs text-slate-600 mt-1">الجزاءات والمكافآت (قريباً)</p>
+            <h3 class="text-lg font-bold text-slate-500 group-hover:text-white transition editable-text" data-id="hr-title">تقارير الموارد البشرية</h3>
+            <p class="text-xs text-slate-600 mt-1 editable-text" data-id="hr-desc">الجزاءات والمكافآت (قريباً)</p>
         </div>
 
     </main>
@@ -246,8 +271,8 @@
             <!-- Modal Header -->
             <div class="flex justify-between items-start mb-8 border-b border-slate-700 pb-6">
                 <div>
-                    <h2 id="modalTitle" class="text-3xl font-black text-white editable-text mb-2">اسم القسم</h2>
-                    <p id="modalDesc" class="text-slate-400 text-sm md:text-base editable-text">الوصف التفصيلي...</p>
+                    <h2 id="modalTitle" class="text-3xl font-black text-white editable-text mb-2" data-id="modal-title">اسم القسم</h2>
+                    <p id="modalDesc" class="text-slate-400 text-sm md:text-base editable-text" data-id="modal-desc">الوصف التفصيلي...</p>
                 </div>
                 <button onclick="document.getElementById('modalOverlay').classList.remove('active')" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">✕</button>
             </div>
@@ -267,7 +292,7 @@
                     
                     <div class="bg-slate-900/50 rounded-xl p-5 border border-slate-700">
                         <h5 class="text-sm font-bold text-slate-300 mb-2">⚠️ ملاحظات هامة:</h5>
-                        <p class="text-sm text-slate-400 leading-relaxed editable-text">
+                        <p class="text-sm text-slate-400 leading-relaxed editable-text" data-id="modal-note">
                             يجب الالتزام بالمعايير القياسية (ISO) في جميع مراحل العمل. أي حيود عن المواصفات يتطلب تقرير رسمي.
                         </p>
                     </div>
@@ -294,9 +319,19 @@
         </div>
     </div>
 
+    <footer class="max-w-7xl mx-auto mb-4 border-t border-slate-700 pt-4 flex justify-between items-center text-xs text-slate-500 px-4">
+        <span>© IMSY Dashboard System</span>
+        <button onclick="resetAllData()" class="text-red-500 hover:text-red-400 transition">⚠ استعادة الإعدادات الافتراضية</button>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast">تم حفظ التغييرات بنجاح!</div>
+
     <script>
-        // --- 1. Data Structure (Enhanced Precision) ---
-        const deptData = {
+        // --- DATA & STATE MANAGEMENT ---
+        
+        // Default Data
+        const defaultDeptData = {
             'tech': {
                 title: 'المكتب الفني (Technical Office)',
                 desc: 'العقل المدبر للإنتاج: مسؤول عن تحويل متطلبات العميل إلى رسومات تنفيذية وخطط إنتاج.',
@@ -364,8 +399,72 @@
             }
         };
 
-        // --- 2. Main Dashboard Logic ---
-        
+        // Active Data
+        let deptData = JSON.parse(JSON.stringify(defaultDeptData));
+
+        // Load Data from Local Storage on Start
+        window.addEventListener('load', () => {
+            loadFromStorage();
+            updateRadarChart();
+        });
+
+        // Save Function
+        function saveToStorage() {
+            // Save KPI Data
+            localStorage.setItem('IMSY_DEPT_DATA', JSON.stringify(deptData));
+
+            // Save Editable Text
+            const textData = {};
+            document.querySelectorAll('.editable-text').forEach(el => {
+                const id = el.getAttribute('data-id');
+                if (id) {
+                    textData[id] = el.innerHTML;
+                }
+            });
+            localStorage.setItem('IMSY_TEXT_DATA', JSON.stringify(textData));
+            
+            showToast();
+        }
+
+        // Load Function
+        function loadFromStorage() {
+            // Load KPI Data
+            const storedDeptData = localStorage.getItem('IMSY_DEPT_DATA');
+            if (storedDeptData) {
+                deptData = JSON.parse(storedDeptData);
+            }
+
+            // Load Editable Text
+            const storedTextData = localStorage.getItem('IMSY_TEXT_DATA');
+            if (storedTextData) {
+                const textData = JSON.parse(storedTextData);
+                document.querySelectorAll('.editable-text').forEach(el => {
+                    const id = el.getAttribute('data-id');
+                    if (id && textData[id]) {
+                        el.innerHTML = textData[id];
+                    }
+                });
+            }
+        }
+
+        // Reset Function
+        function resetAllData() {
+            if (confirm('هل أنت متأكد من استعادة البيانات الافتراضية؟ سيتم مسح جميع تعديلاتك.')) {
+                localStorage.removeItem('IMSY_DEPT_DATA');
+                localStorage.removeItem('IMSY_TEXT_DATA');
+                location.reload();
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById("toast");
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+
+        // --- CHART LOGIC ---
+
         // Initialize Radar Chart
         const mainRadarCtx = document.getElementById('mainRadarChart').getContext('2d');
         const mainRadarChart = new Chart(mainRadarCtx, {
@@ -374,7 +473,7 @@
                 labels: ['المكتب الفني', 'الإنتاج', 'الجودة', 'الصيانة', 'السلامة'],
                 datasets: [{
                     label: 'مستوى الأداء الحالي',
-                    data: [85, 92, 96, 90, 98], // Initial values avg
+                    data: [85, 92, 96, 90, 98], // Initial values (will be overwritten by load)
                     backgroundColor: 'rgba(6, 182, 212, 0.2)',
                     borderColor: '#06b6d4',
                     borderWidth: 2,
@@ -404,10 +503,29 @@
             }
         });
 
-        // --- 3. Modal Logic ---
+        function updateRadarChart() {
+            // Calculate averages from current deptData
+            const averages = [
+                deptData['tech'].kpiValues.reduce((a, b) => a + b, 0) / 3,
+                deptData['prod'].kpiValues.reduce((a, b) => a + b, 0) / 3,
+                deptData['qual'].kpiValues.reduce((a, b) => a + b, 0) / 3,
+                deptData['maint'].kpiValues.reduce((a, b) => a + b, 0) / 3,
+                deptData['safety'].kpiValues.reduce((a, b) => a + b, 0) / 3
+            ];
+            
+            mainRadarChart.data.datasets[0].data = averages;
+            mainRadarChart.update();
+
+            const totalAvg = averages.reduce((a, b) => a + b, 0) / 5;
+            document.getElementById('overallScore').innerText = totalAvg.toFixed(1) + '%';
+        }
+
+        // --- MODAL LOGIC ---
         let currentModalChart = null;
+        let currentDeptId = null;
 
         function openModal(deptId) {
+            currentDeptId = deptId;
             const data = deptData[deptId];
             const overlay = document.getElementById('modalOverlay');
             
@@ -432,7 +550,7 @@
             slidersContainer.innerHTML = '';
             data.kpiLabels.forEach((label, index) => {
                 const value = data.kpiValues[index];
-                const colorClass = data.color; // Using inline style for precise gradient control
+                const colorClass = data.color; 
                 
                 slidersContainer.innerHTML += `
                     <div>
@@ -486,8 +604,10 @@
         }
 
         function updateChartData(deptId, index, newValue) {
+            newValue = Number(newValue);
+            
             // Update Data Structure
-            deptData[deptId].kpiValues[index] = Number(newValue);
+            deptData[deptId].kpiValues[index] = newValue;
             
             // Update UI Numbers
             document.getElementById(`val-${index}`).innerText = newValue + '%';
@@ -500,15 +620,11 @@
             currentModalChart.data.datasets[0].data[index] = newValue;
             currentModalChart.update();
 
-            // Update Main Radar Chart (Calculate Average for the Department)
-            const deptIndex = ['tech', 'prod', 'qual', 'maint', 'safety'].indexOf(deptId);
-            const avg = deptData[deptId].kpiValues.reduce((a, b) => Number(a) + Number(b), 0) / deptData[deptId].kpiValues.length;
-            mainRadarChart.data.datasets[0].data[deptIndex] = avg.toFixed(1);
-            mainRadarChart.update();
-
-            // Update Overall Score text
-            const totalAvg = mainRadarChart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0) / 5;
-            document.getElementById('overallScore').innerText = totalAvg.toFixed(1) + '%';
+            // Update Radar Chart immediately
+            updateRadarChart();
+            
+            // Save immediately
+            saveToStorage();
         }
 
         function closeModal(event) {
@@ -532,13 +648,15 @@
                     el.classList.add('editable-active');
                 });
             } else {
+                // SAVE DATA WHEN EXITING EDIT MODE
+                saveToStorage();
+
                 btn.classList.remove('border-cyan-500', 'text-cyan-400', 'bg-slate-900');
                 btn.innerHTML = '<span class="text-lg">⚙️</span> <span>تعديل البيانات</span>';
                 elements.forEach(el => {
                     el.contentEditable = "false";
                     el.classList.remove('editable-active');
                 });
-                // In a real app, save to DB here. For now, visual feedback.
             }
         }
     </script>
