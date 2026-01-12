@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMSY | لوحة التحليلات المركزية</title>
+    <title>IMSY | نظام إدارة المصنع المتقدم</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
@@ -16,13 +16,10 @@
                     fontFamily: { sans: ['Cairo', 'sans-serif'] },
                     colors: {
                         dark: { 900: '#0b1121', 800: '#151e32', 700: '#2a3b55' },
-                        brand: { 
-                            cyan: '#06b6d4', 
-                            blue: '#3b82f6', 
-                            orange: '#f97316',
-                            red: '#ef4444',
-                            green: '#10b981'
-                        }
+                        brand: { cyan: '#06b6d4', blue: '#3b82f6', orange: '#f97316', green: '#10b981', red: '#ef4444', yellow: '#eab308' }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
@@ -38,378 +35,353 @@
             color: #e2e8f0;
         }
 
-        /* Glassmorphism Panels */
-        .glass-panel {
-            background: rgba(21, 30, 50, 0.7);
+        /* Premium Glass Card */
+        .glass-card {
+            background: rgba(21, 30, 50, 0.75);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 1rem;
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-        .glass-panel:hover {
-            border-color: rgba(6, 182, 212, 0.2);
-            transform: translateY(-2px);
-        }
-
-        /* Step Process Styling */
-        .step-line {
-            position: absolute;
-            top: 2rem;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #2a3b55;
-            z-index: 0;
-        }
-        .step-dot {
-            width: 4rem;
-            height: 4rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #151e32;
-            border: 2px solid #2a3b55;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
             position: relative;
-            z-index: 10;
-            font-weight: 800;
-            font-size: 1.25rem;
-            transition: all 0.3s;
+            overflow: hidden;
         }
-        .step-item:hover .step-dot {
-            border-color: #06b6d4;
-            color: #06b6d4;
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
+        }
+        .glass-card:hover::before { opacity: 1; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(11, 17, 33, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-content {
+            background: #151e32;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            width: 95%; max-width: 1000px; max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95); transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b1121; }
+        ::-webkit-scrollbar-thumb { background: #2a3b55; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Sliders */
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
+            background: #fff; cursor: pointer; margin-top: -7px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.3); border: 2px solid #0f172a;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
         }
 
-        /* Print Styles */
-        @media print {
-            body { background: white !important; color: black !important; }
-            .glass-panel { 
-                background: white !important; 
-                border: 1px solid #ccc !important; 
-                box-shadow: none !important; 
-                color: black !important;
-                break-inside: avoid;
-            }
-            .step-dot { border-color: #000 !important; color: #000 !important; background: #fff !important; }
-            .text-cyan-400, .text-orange-400, .text-blue-400 { color: #000 !important; }
-            .bg-cyan-500, .bg-orange-500 { background: #ddd !important; -webkit-print-color-adjust: exact; }
-            canvas { filter: none !important; }
-            .no-print { display: none !important; }
+        .editable-active {
+            outline: 2px dashed #06b6d4; background: rgba(6, 182, 212, 0.05); padding: 2px 4px; border-radius: 4px;
         }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 antialiased">
 
-    <!-- Header & Top Metrics -->
-    <header class="max-w-7xl mx-auto mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-end border-b border-slate-700 pb-6 mb-6">
-            <div>
-                <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight">
-                    نظام إدارة مصنع <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">IMSY</span>
-                </h1>
-                <p class="text-slate-400 mt-2 text-lg">لوحة المعلومات وتحليل الأداء المؤسسي</p>
+    <!-- Header Area -->
+    <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700/50 pb-6">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse-slow"></span>
+                <span class="text-xs font-mono text-cyan-500 tracking-wider">IMSY PRODUCTION SYSTEM v3.0</span>
             </div>
-            <div class="text-left mt-4 md:mt-0 bg-slate-800 px-4 py-2 rounded border border-slate-700">
-                <div class="text-xs text-slate-500 uppercase tracking-widest">فترة التقرير</div>
-                <div class="font-bold text-white text-xl">الربع الأول - 2026</div>
-            </div>
+            <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight editable-text">
+                نظام إدارة مصنع <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">IMSY</span>
+            </h1>
+            <p class="text-slate-400 mt-1 editable-text text-sm md:text-base">لوحة القيادة المركزية: مراقبة الأداء، الجودة، والعمليات التشغيلية</p>
         </div>
-
-        <!-- High-Level Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div>
-                    <div class="text-slate-400 text-xs mb-1">إجمالي الطلبات</div>
-                    <div class="text-2xl font-bold text-white">124</div>
-                </div>
-                <div class="text-green-400 text-sm font-bold bg-green-500/10 px-2 py-1 rounded">+12%</div>
+        
+        <div class="flex items-center gap-3">
+            <div class="text-right hidden md:block mr-4">
+                <div class="text-xs text-slate-500">حالة النظام</div>
+                <div class="font-bold text-green-400 text-sm">متصل ومستقر</div>
             </div>
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div>
-                    <div class="text-slate-400 text-xs mb-1">نسبة التسليم</div>
-                    <div class="text-2xl font-bold text-cyan-400">98.5%</div>
-                </div>
-                <div class="text-cyan-400 text-2xl">🚚</div>
-            </div>
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div>
-                    <div class="text-slate-400 text-xs mb-1">معدل الجودة</div>
-                    <div class="text-2xl font-bold text-blue-400">96.2%</div>
-                </div>
-                <div class="text-blue-400 text-2xl">🛡️</div>
-            </div>
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div>
-                    <div class="text-slate-400 text-xs mb-1">كفاءة التشغيل</div>
-                    <div class="text-2xl font-bold text-orange-400">92%</div>
-                </div>
-                <div class="text-orange-400 text-2xl">⚙️</div>
-            </div>
+            <button onclick="toggleEditMode()" id="editBtn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg">
+                <span class="text-lg">⚙️</span>
+                <span>تعديل البيانات</span>
+            </button>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto space-y-8">
-
-        <!-- 1. ADVANCED ANALYTICS (الرسوم البيانية التحليلية) -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Left: Radar Chart (Performance Balance) -->
-            <div class="glass-panel p-6 lg:col-span-1">
-                <h3 class="font-bold text-white mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-cyan-500"></span> توازن أداء الأقسام
-                </h3>
-                <div class="relative h-64 w-full">
-                    <canvas id="radarChart"></canvas>
-                </div>
-                <p class="text-xs text-slate-400 mt-4 text-center">يقارن هذا الرسم بين الأقسام الخمسة بناءً على تحقيق الأهداف الشهرية.</p>
-            </div>
-
-            <!-- Right: Production Trends (Combo Chart) -->
-            <div class="glass-panel p-6 lg:col-span-2">
-                <h3 class="font-bold text-white mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-orange-500"></span> تحليل الإنتاج مقابل الهالك (شهري)
-                </h3>
-                <div class="relative h-64 w-full">
-                    <canvas id="comboChart"></canvas>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- 2. DETAILED WORKFLOW (دورة العمل التفصيلية) -->
-        <section class="glass-panel p-8">
-            <h2 class="text-2xl font-bold text-white mb-8 border-b border-slate-700 pb-4">
-                المسار التشغيلي (Operational Workflow)
-            </h2>
-            
-            <div class="relative">
-                <!-- Connecting Line (Desktop Only) -->
-                <div class="hidden md:block absolute top-8 left-0 right-0 h-1 bg-slate-700 z-0"></div>
-
-                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 relative z-10">
-                    
-                    <!-- Step 1 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-cyan-500 transition">01</div>
-                        <h4 class="font-bold text-cyan-400 text-sm">استلام الطلب</h4>
-                        <p class="text-xs text-slate-400 mt-1">تحديد المواصفات</p>
+    <!-- Main Overview (Radar Chart) -->
+    <section class="max-w-7xl mx-auto mb-8">
+        <div class="glass-card p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
+            <div class="w-full md:w-1/3">
+                <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                    <span class="text-cyan-400">📊</span> نظرة عامة على الأداء
+                </h2>
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+                    مقارنة حية لأداء الأقسام الخمسة الرئيسية. يوضح الرسم البياني نقاط القوة (القمم) وفرص التحسين (الانخفاضات) في الوقت الفعلي.
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                        <div class="text-xs text-slate-500">الكفاءة الكلية</div>
+                        <div class="text-xl font-bold text-white" id="overallScore">92%</div>
                     </div>
-
-                    <!-- Step 2 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-blue-500 transition">02</div>
-                        <h4 class="font-bold text-blue-400 text-sm">المكتب الفني</h4>
-                        <p class="text-xs text-slate-400 mt-1">CAD & BOM</p>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-purple-500 transition">03</div>
-                        <h4 class="font-bold text-purple-400 text-sm">المخازن</h4>
-                        <p class="text-xs text-slate-400 mt-1">صرف الخامات</p>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-orange-500 rounded-full flex items-center justify-center text-xl font-bold text-orange-500 mb-3 shadow-[0_0_15px_rgba(249,115,22,0.3)] relative z-10">04</div>
-                        <h4 class="font-bold text-orange-400 text-sm">القص والتشكيل</h4>
-                        <p class="text-xs text-slate-400 mt-1">ليزر & تناية</p>
-                    </div>
-
-                    <!-- Step 5 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-orange-500 rounded-full flex items-center justify-center text-xl font-bold text-orange-500 mb-3 shadow-[0_0_15px_rgba(249,115,22,0.3)] relative z-10">05</div>
-                        <h4 class="font-bold text-orange-400 text-sm">التشغيل الدقيق</h4>
-                        <p class="text-xs text-slate-400 mt-1">مخرطة & فريزة</p>
-                    </div>
-
-                    <!-- Step 6 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-yellow-500 transition">06</div>
-                        <h4 class="font-bold text-yellow-400 text-sm">التجميع</h4>
-                        <p class="text-xs text-slate-400 mt-1">ميكانيكا & كهرباء</p>
-                    </div>
-
-                    <!-- Step 7 -->
-                    <div class="step-item text-center">
-                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-green-500 transition">07</div>
-                        <h4 class="font-bold text-green-400 text-sm">التسليم</h4>
-                        <p class="text-xs text-slate-400 mt-1">اختبار & شحن</p>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. DEPARTMENT KPIS (Detailed Cards) -->
-        <section>
-            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span class="text-cyan-500">📊</span> مؤشرات الأداء التفصيلية (KPI Breakdowns)
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                
-                <!-- Engineering -->
-                <div class="glass-panel p-4">
-                    <h4 class="font-bold text-blue-400 text-sm mb-3 text-center">المكتب الفني</h4>
-                    <div class="h-32 relative"><canvas id="miniEng"></canvas></div>
-                    <div class="mt-3 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>دقة BOM</span>
-                            <span class="text-white font-bold">98%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-blue-500 h-1 rounded" style="width: 98%"></div></div>
-                    </div>
-                </div>
-
-                <!-- Production -->
-                <div class="glass-panel p-4">
-                    <h4 class="font-bold text-orange-400 text-sm mb-3 text-center">الإنتاج</h4>
-                    <div class="h-32 relative"><canvas id="miniProd"></canvas></div>
-                    <div class="mt-3 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>الالتزام</span>
-                            <span class="text-white font-bold">94%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-orange-500 h-1 rounded" style="width: 94%"></div></div>
-                    </div>
-                </div>
-
-                <!-- Finance -->
-                <div class="glass-panel p-4">
-                    <h4 class="font-bold text-purple-400 text-sm mb-3 text-center">الحسابات</h4>
-                    <div class="h-32 relative"><canvas id="miniFin"></canvas></div>
-                    <div class="mt-3 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>ضبط التكلفة</span>
-                            <span class="text-white font-bold">99%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-purple-500 h-1 rounded" style="width: 99%"></div></div>
-                    </div>
-                </div>
-
-                <!-- Quality -->
-                <div class="glass-panel p-4">
-                    <h4 class="font-bold text-green-400 text-sm mb-3 text-center">الجودة</h4>
-                    <div class="h-32 relative"><canvas id="miniQual"></canvas></div>
-                    <div class="mt-3 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>خلو العيوب</span>
-                            <span class="text-white font-bold">97%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-green-500 h-1 rounded" style="width: 97%"></div></div>
-                    </div>
-                </div>
-
-                <!-- Maintenance -->
-                <div class="glass-panel p-4">
-                    <h4 class="font-bold text-red-400 text-sm mb-3 text-center">الصيانة</h4>
-                    <div class="h-32 relative"><canvas id="miniMaint"></canvas></div>
-                    <div class="mt-3 space-y-2">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>استجابة</span>
-                            <span class="text-white font-bold">95%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-red-500 h-1 rounded" style="width: 95%"></div></div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- 4. HR POLICY (Formal Table) -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- Penalties Table -->
-            <div class="glass-panel p-6 border-t-4 border-t-red-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-white">لائحة المخالفات والجزاءات</h3>
-                    <span class="bg-red-500/10 text-red-400 text-xs px-2 py-1 rounded">System: Strict</span>
-                </div>
-                <table class="w-full text-sm text-right">
-                    <thead class="text-slate-500 border-b border-slate-700">
-                        <tr>
-                            <th class="pb-2">نوع المخالفة</th>
-                            <th class="pb-2">المسؤول</th>
-                            <th class="pb-2">الإجراء / الجزاء</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-slate-300 divide-y divide-slate-800">
-                        <tr>
-                            <td class="py-3">خطأ في التصميم (BOM/CAD)</td>
-                            <td class="text-blue-400">مهندس</td>
-                            <td class="text-red-400">تحمل تكلفة الخامة</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3">تلف خامة أثناء التشغيل</td>
-                            <td class="text-orange-400">فني/عامل</td>
-                            <td class="text-red-400">تحمل نسبة من الهالك</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3">تأخير في التسليم (بدون عذر)</td>
-                            <td class="text-slate-400">مدير القسم</td>
-                            <td class="text-yellow-400">لفت نظر / خصم</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Incentives Table -->
-            <div class="glass-panel p-6 border-t-4 border-t-green-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-white">نظام المكافآت والحوافز</h3>
-                    <span class="bg-green-500/10 text-green-400 text-xs px-2 py-1 rounded">System: Performance</span>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4 bg-green-500/5 p-3 rounded border border-green-500/10">
-                        <div class="text-2xl">🏆</div>
-                        <div>
-                            <div class="font-bold text-green-400">حافز الجودة (Zero Defect)</div>
-                            <div class="text-xs text-slate-400">مكافأة شهرية عند عدم وجود أي مرتجعات أو توالف.</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4 bg-blue-500/5 p-3 rounded border border-blue-500/10">
-                        <div class="text-2xl">💡</div>
-                        <div>
-                            <div class="font-bold text-blue-400">حافز التطوير (Innovation)</div>
-                            <div class="text-xs text-slate-400">مكافأة خاصة لأي فكرة توفر في الخامات أو الوقت.</div>
-                        </div>
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                        <div class="text-xs text-slate-500">حالة الإنتاج</div>
+                        <div class="text-xl font-bold text-green-400">ممتاز</div>
                     </div>
                 </div>
             </div>
+            <div class="w-full md:w-2/3 h-64 md:h-72 relative">
+                <canvas id="mainRadarChart"></canvas>
+            </div>
+        </div>
+    </section>
 
-        </section>
+    <!-- Departments Grid -->
+    <main class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+
+        <!-- 1. Technical Office -->
+        <div class="glass-card p-6 group" onclick="openModal('tech')">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-2xl group-hover:bg-blue-500/20 transition text-blue-400">📐</div>
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Engineering</div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">المكتب الفني</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2">التصميمات (CAD)، الرسومات التنفيذية (Shop Drawings)، وحصر المواد (BOM).</p>
+            <div class="flex items-center gap-2 text-xs font-mono text-blue-400">
+                <span>●</span> انقر للتفاصيل والتعديل
+            </div>
+        </div>
+
+        <!-- 2. Production -->
+        <div class="glass-card p-6 group" onclick="openModal('prod')">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-2xl group-hover:bg-orange-500/20 transition text-orange-400">⚙️</div>
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Fabrication</div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">الإنتاج والتصنيع</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2">قص الليزر، التناية، الخراطة، الفريزة، والتجميع النهائي للماكينات.</p>
+            <div class="flex items-center gap-2 text-xs font-mono text-orange-400">
+                <span>●</span> انقر للتفاصيل والتعديل
+            </div>
+        </div>
+
+        <!-- 3. Quality Control -->
+        <div class="glass-card p-6 group" onclick="openModal('qual')">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-2xl group-hover:bg-green-500/20 transition text-green-400">🛡️</div>
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">QC & QA</div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">مراقبة الجودة</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2">فحص الأبعاد، اختبارات الأداء الوظيفي، وتقارير عدم المطابقة (NCR).</p>
+            <div class="flex items-center gap-2 text-xs font-mono text-green-400">
+                <span>●</span> انقر للتفاصيل والتعديل
+            </div>
+        </div>
+
+        <!-- 4. Maintenance -->
+        <div class="glass-card p-6 group" onclick="openModal('maint')">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-2xl group-hover:bg-red-500/20 transition text-red-400">🔧</div>
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Maintenance</div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">الصيانة والدعم</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2">الصيانة الوقائية (Preventive)، الإصلاح الطارئ، وتوافر قطع الغيار.</p>
+            <div class="flex items-center gap-2 text-xs font-mono text-red-400">
+                <span>●</span> انقر للتفاصيل والتعديل
+            </div>
+        </div>
+
+        <!-- 5. HSE (Safety) -->
+        <div class="glass-card p-6 group" onclick="openModal('safety')">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center text-2xl group-hover:bg-yellow-500/20 transition text-yellow-400">🦺</div>
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Safety First</div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">السلامة والصحة المهنية</h3>
+            <p class="text-sm text-slate-400 mb-4 line-clamp-2">الالتزام بمهمات الوقاية (PPE)، تحليل المخاطر، وسجلات الحوادث.</p>
+            <div class="flex items-center gap-2 text-xs font-mono text-yellow-400">
+                <span>●</span> انقر للتفاصيل والتعديل
+            </div>
+        </div>
+
+        <!-- 6. HR & Admin -->
+        <div class="glass-card p-6 group flex flex-col items-center justify-center border-dashed border-2 border-slate-700 bg-transparent hover:bg-slate-800/30">
+            <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-2xl text-slate-500 mb-3 group-hover:text-white transition">📂</div>
+            <h3 class="text-lg font-bold text-slate-500 group-hover:text-white transition">تقارير الموارد البشرية</h3>
+            <p class="text-xs text-slate-600 mt-1">الجزاءات والمكافآت (قريباً)</p>
+        </div>
 
     </main>
 
-    <footer class="max-w-7xl mx-auto mt-12 mb-8 flex justify-between items-center border-t border-slate-800 pt-6">
-        <div class="text-xs text-slate-500">
-            © 2026 IMSY Management System. All rights reserved.<br>
-            Confidential Document for Internal Use Only.
+    <!-- Modal (Detail View) -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content p-6 md:p-10" onclick="event.stopPropagation()">
+            
+            <!-- Modal Header -->
+            <div class="flex justify-between items-start mb-8 border-b border-slate-700 pb-6">
+                <div>
+                    <h2 id="modalTitle" class="text-3xl font-black text-white editable-text mb-2">اسم القسم</h2>
+                    <p id="modalDesc" class="text-slate-400 text-sm md:text-base editable-text">الوصف التفصيلي...</p>
+                </div>
+                <button onclick="document.getElementById('modalOverlay').classList.remove('active')" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">✕</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Right Column: Tasks & Details (Span 7) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div>
+                        <h4 class="font-bold text-white mb-4 flex items-center gap-2 text-lg">
+                            <span class="text-cyan-400">📋</span> المهام والمسؤوليات (Responsibilities)
+                        </h4>
+                        <div id="modalTasks" class="grid gap-3">
+                            <!-- Tasks injected via JS -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-900/50 rounded-xl p-5 border border-slate-700">
+                        <h5 class="text-sm font-bold text-slate-300 mb-2">⚠️ ملاحظات هامة:</h5>
+                        <p class="text-sm text-slate-400 leading-relaxed editable-text">
+                            يجب الالتزام بالمعايير القياسية (ISO) في جميع مراحل العمل. أي حيود عن المواصفات يتطلب تقرير رسمي.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Left Column: KPI Adjustments (Span 5) -->
+                <div class="lg:col-span-5 bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-xl h-fit">
+                    <h4 class="font-bold text-white mb-6 flex items-center gap-2 text-lg">
+                        <span class="text-cyan-400">⚙️</span> ضبط مؤشرات الأداء (KPIs)
+                    </h4>
+                    
+                    <!-- Chart -->
+                    <div class="h-48 relative mb-8">
+                        <canvas id="modalChart"></canvas>
+                    </div>
+
+                    <!-- Sliders -->
+                    <div id="slidersContainer" class="space-y-6">
+                        <!-- Sliders injected via JS -->
+                    </div>
+                </div>
+
+            </div>
         </div>
-        <button onclick="window.print()" class="no-print bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2">
-            <span>طباعة التقرير</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-        </button>
-    </footer>
+    </div>
 
-    <!-- Charts Configuration -->
     <script>
-        Chart.defaults.color = '#64748b';
-        Chart.defaults.font.family = 'Cairo';
+        // --- 1. Data Structure (Enhanced Precision) ---
+        const deptData = {
+            'tech': {
+                title: 'المكتب الفني (Technical Office)',
+                desc: 'العقل المدبر للإنتاج: مسؤول عن تحويل متطلبات العميل إلى رسومات تنفيذية وخطط إنتاج.',
+                color: '#3b82f6',
+                kpiLabels: ['دقة الـ BOM', 'جودة الرسومات', 'التسليم في الموعد'],
+                kpiValues: [95, 90, 85],
+                tasks: [
+                    'إعداد الرسومات التنفيذية (Shop Drawings) وملفات التشغيل (DXF/G-Code).',
+                    'إعداد قوائم المواد (Bill of Materials - BOM) بدقة لتحديد المشتريات.',
+                    'مراجعة التصميمات هندسياً لضمان قابلية التصنيع (Design for Manufacturing).',
+                    'أرشفة الرسومات وتحديث النسخ (Version Control).'
+                ]
+            },
+            'prod': {
+                title: 'الإنتاج والتصنيع (Production)',
+                desc: 'تنفيذ العمليات الصناعية لتحويل الخامات إلى منتج نهائي وفقاً للمواصفات.',
+                color: '#f97316',
+                kpiLabels: ['الالتزام بالخطة', 'كفاءة التشغيل', 'تقليل الهالك'],
+                kpiValues: [92, 88, 94],
+                tasks: [
+                    'تشغيل ماكينات القص بالليزر (Laser Cutting) بدقة عالية.',
+                    'عمليات الثني والتشكيل على التناية (CNC Bending).',
+                    'التشغيل الميكانيكي الدقيق: خراطة (Lathe) وفريزة (Milling).',
+                    'أعمال اللحام (TIG/MIG) والتجميع النهائي للماكينة.'
+                ]
+            },
+            'qual': {
+                title: 'مراقبة وتكيد الجودة (QC/QA)',
+                desc: 'الجهة الرقابية لضمان مطابقة المنتج للمواصفات والمعايير العالمية.',
+                color: '#10b981',
+                kpiLabels: ['معدل القبول', 'سرعة الفحص', 'رضا العميل'],
+                kpiValues: [96, 92, 95],
+                tasks: [
+                    'فحص الخامات الواردة (In-coming QC) والتأكد من شهادات المنشأ.',
+                    'الفحص أثناء العمليات (In-process QC) لضبط الأبعاد.',
+                    'اختبارات الأداء الوظيفي للماكينة قبل التسليم (FAT).',
+                    'تحليل أسباب العيوب (Root Cause Analysis) وإصدار الإجراءات التصحيحية.'
+                ]
+            },
+            'maint': {
+                title: 'الصيانة والدعم الفني',
+                desc: 'الحفاظ على الأصول والمعدات وضمان استمرارية التشغيل.',
+                color: '#ef4444',
+                kpiLabels: ['الاستجابة للأعطال', 'الصيانة الوقائية', 'جاهزية المعدات'],
+                kpiValues: [90, 95, 98],
+                tasks: [
+                    'تنفيذ خطة الصيانة الوقائية (Preventive Maintenance Schedule).',
+                    'الاستجابة الفورية للأعطال الطارئة (Corrective Maintenance).',
+                    'إدارة مخزون قطع الغيار الحرجة (Spare Parts Management).',
+                    'معايرة أجهزة القياس والماكينات بشكل دوري.'
+                ]
+            },
+            'safety': {
+                title: 'السلامة والصحة المهنية (HSE)',
+                desc: 'توفير بيئة عمل آمنة، حماية العاملين، والامتثال للوائح السلامة.',
+                color: '#eab308',
+                kpiLabels: ['الالتزام بالـ PPE', 'ساعات بدون حوادث', 'التدريب'],
+                kpiValues: [98, 100, 92],
+                tasks: [
+                    'التأكد من ارتداء مهمات الوقاية الشخصية (PPE) لجميع العاملين.',
+                    'تقييم المخاطر (Risk Assessment) قبل بدء أي عملية جديدة.',
+                    'التفتيش الدوري على طفايات الحريق ومعدات السلامة.',
+                    'عقد دورات توعية وتدريب على إجراءات الطوارئ.'
+                ]
+            }
+        };
 
-        // 1. Radar Chart (Department Health)
-        new Chart(document.getElementById('radarChart'), {
+        // --- 2. Main Dashboard Logic ---
+        
+        // Initialize Radar Chart
+        const mainRadarCtx = document.getElementById('mainRadarChart').getContext('2d');
+        const mainRadarChart = new Chart(mainRadarCtx, {
             type: 'radar',
             data: {
-                labels: ['الدقة', 'السرعة', 'التكلفة', 'الجودة', 'السلامة'],
+                labels: ['المكتب الفني', 'الإنتاج', 'الجودة', 'الصيانة', 'السلامة'],
                 datasets: [{
-                    label: 'الأداء الحالي',
-                    data: [95, 88, 92, 96, 90],
+                    label: 'مستوى الأداء الحالي',
+                    data: [85, 92, 96, 90, 98], // Initial values avg
                     backgroundColor: 'rgba(6, 182, 212, 0.2)',
                     borderColor: '#06b6d4',
+                    borderWidth: 2,
                     pointBackgroundColor: '#fff',
+                    pointBorderColor: '#06b6d4',
+                    pointHoverBackgroundColor: '#06b6d4',
+                    pointHoverBorderColor: '#fff'
                 }]
             },
             options: {
@@ -417,71 +389,158 @@
                 maintainAspectRatio: false,
                 scales: {
                     r: {
-                        angleLines: { color: '#1e293b' },
-                        grid: { color: '#1e293b' },
-                        pointLabels: { color: '#94a3b8', font: { size: 12 } },
+                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        pointLabels: { 
+                            color: '#94a3b8', 
+                            font: { family: 'Cairo', size: 12, weight: 'bold' } 
+                        },
+                        ticks: { display: false, backdropColor: 'transparent' },
                         suggestedMin: 50,
                         suggestedMax: 100
                     }
-                }
-            }
-        });
-
-        // 2. Combo Chart (Production vs Scrap)
-        new Chart(document.getElementById('comboChart'), {
-            type: 'bar',
-            data: {
-                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                datasets: [
-                    {
-                        label: 'عدد الوحدات المنتجة',
-                        data: [120, 135, 125, 145, 150, 160],
-                        backgroundColor: '#3b82f6',
-                        order: 2
-                    },
-                    {
-                        label: 'معدل الهالك (%)',
-                        data: [5, 4.5, 6, 3, 2.5, 2],
-                        type: 'line',
-                        borderColor: '#f97316',
-                        borderWidth: 3,
-                        yAxisID: 'y1',
-                        order: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { grid: { display: false } },
-                    y: { grid: { color: '#1e293b' } },
-                    y1: { position: 'right', grid: { display: false }, suggestedMax: 10 }
-                }
-            }
-        });
-
-        // 3. Mini Doughnut Charts Config
-        const miniConfig = (color) => ({
-            type: 'doughnut',
-            data: {
-                labels: ['Done', 'Pending'],
-                datasets: [{ data: [85, 15], backgroundColor: [color, '#1e293b'], borderWidth: 0 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
+                },
                 plugins: { legend: { display: false } }
             }
         });
 
-        new Chart(document.getElementById('miniEng'), miniConfig('#3b82f6'));
-        new Chart(document.getElementById('miniProd'), miniConfig('#f97316'));
-        new Chart(document.getElementById('miniFin'), miniConfig('#8b5cf6'));
-        new Chart(document.getElementById('miniQual'), miniConfig('#10b981'));
-        new Chart(document.getElementById('miniMaint'), miniConfig('#ef4444'));
+        // --- 3. Modal Logic ---
+        let currentModalChart = null;
 
+        function openModal(deptId) {
+            const data = deptData[deptId];
+            const overlay = document.getElementById('modalOverlay');
+            
+            // Set Text Content
+            document.getElementById('modalTitle').innerText = data.title;
+            document.getElementById('modalDesc').innerText = data.desc;
+            
+            // Populate Tasks
+            const tasksContainer = document.getElementById('modalTasks');
+            tasksContainer.innerHTML = '';
+            data.tasks.forEach(task => {
+                tasksContainer.innerHTML += `
+                    <div class="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:bg-slate-800 transition editable-text group">
+                        <span class="text-${data.color.replace('#', '')} mt-1 opacity-70 group-hover:opacity-100 transition">•</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">${task}</p>
+                    </div>
+                `;
+            });
+
+            // Populate Sliders
+            const slidersContainer = document.getElementById('slidersContainer');
+            slidersContainer.innerHTML = '';
+            data.kpiLabels.forEach((label, index) => {
+                const value = data.kpiValues[index];
+                const colorClass = data.color; // Using inline style for precise gradient control
+                
+                slidersContainer.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-xs mb-2 font-bold font-mono">
+                            <span class="text-slate-400 editable-text">${label}</span>
+                            <span class="text-white" id="val-${index}">${value}%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="${value}" 
+                            oninput="updateChartData('${deptId}', ${index}, this.value)"
+                            style="background: linear-gradient(to right, ${colorClass} ${value}%, #334155 ${value}%);"
+                        >
+                    </div>
+                `;
+            });
+
+            // Render Modal Chart
+            if (currentModalChart) currentModalChart.destroy();
+            
+            const ctx = document.getElementById('modalChart').getContext('2d');
+            currentModalChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.kpiLabels,
+                    datasets: [{
+                        data: data.kpiValues,
+                        backgroundColor: data.color,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100, 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' }
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: '#94a3b8', font: { family: 'Cairo' } } 
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            overlay.classList.add('active');
+        }
+
+        function updateChartData(deptId, index, newValue) {
+            // Update Data Structure
+            deptData[deptId].kpiValues[index] = Number(newValue);
+            
+            // Update UI Numbers
+            document.getElementById(`val-${index}`).innerText = newValue + '%';
+            
+            // Update Slider Visual
+            const sliders = document.querySelectorAll('input[type=range]');
+            sliders[index].style.background = `linear-gradient(to right, ${deptData[deptId].color} ${newValue}%, #334155 ${newValue}%)`;
+
+            // Update Modal Chart
+            currentModalChart.data.datasets[0].data[index] = newValue;
+            currentModalChart.update();
+
+            // Update Main Radar Chart (Calculate Average for the Department)
+            const deptIndex = ['tech', 'prod', 'qual', 'maint', 'safety'].indexOf(deptId);
+            const avg = deptData[deptId].kpiValues.reduce((a, b) => Number(a) + Number(b), 0) / deptData[deptId].kpiValues.length;
+            mainRadarChart.data.datasets[0].data[deptIndex] = avg.toFixed(1);
+            mainRadarChart.update();
+
+            // Update Overall Score text
+            const totalAvg = mainRadarChart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0) / 5;
+            document.getElementById('overallScore').innerText = totalAvg.toFixed(1) + '%';
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'modalOverlay') {
+                document.getElementById('modalOverlay').classList.remove('active');
+            }
+        }
+
+        // Edit Mode Toggle
+        let isEditMode = false;
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('editBtn');
+            const elements = document.querySelectorAll('.editable-text');
+
+            if (isEditMode) {
+                btn.classList.add('border-cyan-500', 'text-cyan-400', 'bg-slate-900');
+                btn.innerHTML = '<span>💾</span> حفظ التعديلات';
+                elements.forEach(el => {
+                    el.contentEditable = "true";
+                    el.classList.add('editable-active');
+                });
+            } else {
+                btn.classList.remove('border-cyan-500', 'text-cyan-400', 'bg-slate-900');
+                btn.innerHTML = '<span class="text-lg">⚙️</span> <span>تعديل البيانات</span>';
+                elements.forEach(el => {
+                    el.contentEditable = "false";
+                    el.classList.remove('editable-active');
+                });
+                // In a real app, save to DB here. For now, visual feedback.
+            }
+        }
     </script>
 </body>
 </html>
