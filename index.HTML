@@ -3,33 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام IMSY | لوحة التحكم الصناعية</title>
+    <title>IMSY | لوحة التحليلات المركزية</title>
     
-    <!-- استدعاء مكتبة Tailwind CSS للتصميم -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- استدعاء الخط العربي Cairo -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&display=swap" rel="stylesheet">
-    
-    <!-- استدعاء مكتبة Chart.js للرسوم البيانية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- إعدادات Tailwind المخصصة -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { sans: ['Cairo', 'sans-serif'] },
                     colors: {
-                        dark: {
-                            900: '#0f172a',
-                            800: '#1e293b',
-                            700: '#334155',
-                        },
-                        brand: {
-                            cyan: '#06b6d4',
+                        dark: { 900: '#0b1121', 800: '#151e32', 700: '#2a3b55' },
+                        brand: { 
+                            cyan: '#06b6d4', 
+                            blue: '#3b82f6', 
                             orange: '#f97316',
-                            purple: '#8b5cf6'
+                            red: '#ef4444',
+                            green: '#10b981'
                         }
                     }
                 }
@@ -38,323 +30,458 @@
     </script>
 
     <style>
-        /* تنسيقات أساسية للخلفية */
         body {
-            background-color: #0f172a; /* لون داكن Slate 900 */
+            background-color: #0b1121;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(249, 115, 22, 0.1) 0px, transparent 50%);
-            color: white;
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(249, 115, 22, 0.05), transparent 25%);
+            color: #e2e8f0;
         }
 
-        /* تنسيق الكروت الزجاجية (Bento Style) */
-        .bento-card {
-            background: rgba(30, 41, 59, 0.7); /* شفافية */
-            backdrop-filter: blur(12px); /* تأثير ضبابي */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(21, 30, 50, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
-
-        .bento-card:hover {
+        .glass-panel:hover {
+            border-color: rgba(6, 182, 212, 0.2);
             transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.3);
         }
 
-        /* تأثيرات النصوص المضيئة */
-        .text-glow-cyan { text-shadow: 0 0 20px rgba(6, 182, 212, 0.5); }
-        .text-glow-orange { text-shadow: 0 0 20px rgba(249, 115, 22, 0.5); }
+        /* Step Process Styling */
+        .step-line {
+            position: absolute;
+            top: 2rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #2a3b55;
+            z-index: 0;
+        }
+        .step-dot {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #151e32;
+            border: 2px solid #2a3b55;
+            position: relative;
+            z-index: 10;
+            font-weight: 800;
+            font-size: 1.25rem;
+            transition: all 0.3s;
+        }
+        .step-item:hover .step-dot {
+            border-color: #06b6d4;
+            color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
 
-        /* إعدادات الطباعة (يحول التصميم لأبيض وأسود تلقائياً عند الطباعة) */
+        /* Print Styles */
         @media print {
-            body { background: white !important; color: black !important; background-image: none !important; }
-            .bento-card { 
+            body { background: white !important; color: black !important; }
+            .glass-panel { 
                 background: white !important; 
-                border: 1px solid #ddd !important; 
+                border: 1px solid #ccc !important; 
                 box-shadow: none !important; 
                 color: black !important;
-                page-break-inside: avoid;
+                break-inside: avoid;
             }
-            .text-glow-cyan, .text-glow-orange { text-shadow: none !important; color: #000 !important; }
-            canvas { filter: invert(0); }
+            .step-dot { border-color: #000 !important; color: #000 !important; background: #fff !important; }
+            .text-cyan-400, .text-orange-400, .text-blue-400 { color: #000 !important; }
+            .bg-cyan-500, .bg-orange-500 { background: #ddd !important; -webkit-print-color-adjust: exact; }
+            canvas { filter: none !important; }
             .no-print { display: none !important; }
-            h1, h2, h3, h4 { color: black !important; }
         }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 antialiased selection:bg-cyan-500 selection:text-white">
+<body class="min-h-screen p-4 md:p-8 antialiased">
 
-    <!-- منطقة العنوان (Header) -->
-    <header class="max-w-7xl mx-auto mb-12 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="text-center md:text-right">
-            <h1 class="text-4xl md:text-6xl font-black tracking-tight">
-                نظام إدارة مصنع <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 text-glow-cyan">IMSY</span>
-            </h1>
-        </div>
-        
-        <!-- إحصائيات سريعة -->
-        <div class="flex gap-4">
-            <div class="text-center bg-white/5 p-4 rounded-2xl border border-white/10">
-                <div class="text-2xl font-bold text-orange-400">7</div>
-                <div class="text-xs text-slate-400">مراحل إنتاج</div>
+    <!-- Header & Top Metrics -->
+    <header class="max-w-7xl mx-auto mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-end border-b border-slate-700 pb-6 mb-6">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight">
+                    نظام إدارة مصنع <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">IMSY</span>
+                </h1>
+                <p class="text-slate-400 mt-2 text-lg">لوحة المعلومات وتحليل الأداء المؤسسي</p>
             </div>
-            <div class="text-center bg-white/5 p-4 rounded-2xl border border-white/10">
-                <div class="text-2xl font-bold text-cyan-400">3</div>
-                <div class="text-xs text-slate-400">مؤشرات KPI</div>
+            <div class="text-left mt-4 md:mt-0 bg-slate-800 px-4 py-2 rounded border border-slate-700">
+                <div class="text-xs text-slate-500 uppercase tracking-widest">فترة التقرير</div>
+                <div class="font-bold text-white text-xl">الربع الأول - 2026</div>
+            </div>
+        </div>
+
+        <!-- High-Level Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div>
+                    <div class="text-slate-400 text-xs mb-1">إجمالي الطلبات</div>
+                    <div class="text-2xl font-bold text-white">124</div>
+                </div>
+                <div class="text-green-400 text-sm font-bold bg-green-500/10 px-2 py-1 rounded">+12%</div>
+            </div>
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div>
+                    <div class="text-slate-400 text-xs mb-1">نسبة التسليم</div>
+                    <div class="text-2xl font-bold text-cyan-400">98.5%</div>
+                </div>
+                <div class="text-cyan-400 text-2xl">🚚</div>
+            </div>
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div>
+                    <div class="text-slate-400 text-xs mb-1">معدل الجودة</div>
+                    <div class="text-2xl font-bold text-blue-400">96.2%</div>
+                </div>
+                <div class="text-blue-400 text-2xl">🛡️</div>
+            </div>
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div>
+                    <div class="text-slate-400 text-xs mb-1">كفاءة التشغيل</div>
+                    <div class="text-2xl font-bold text-orange-400">92%</div>
+                </div>
+                <div class="text-orange-400 text-2xl">⚙️</div>
             </div>
         </div>
     </header>
 
-    <!-- الشبكة الرئيسية (Grid Layout) -->
-    <main class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
+    <main class="max-w-7xl mx-auto space-y-8">
 
-        <!-- الصف الأول: مسار التصنيع (Workflow) -->
-        <div class="col-span-1 md:col-span-12">
-            <div class="flex items-center gap-4 mb-6">
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <span class="text-cyan-400 text-3xl">⦿</span> مسار التصنيع (Workflow)
-                </h2>
-                <div class="h-px bg-white/10 flex-grow"></div>
-            </div>
+        <!-- 1. ADVANCED ANALYTICS (الرسوم البيانية التحليلية) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- خطوات العمل -->
-            <div class="grid grid-cols-2 md:grid-cols-7 gap-4">
-                
-                <!-- 1. استلام الطلب -->
-                <div class="bento-card group flex flex-col items-center text-center hover:bg-blue-900/30">
-                    <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold mb-3 border border-blue-500/30 group-hover:scale-110 transition">1</div>
-                    <h3 class="font-bold text-sm">استلام الطلب</h3>
-                    <p class="text-xs text-slate-400 mt-1">تحديد المواصفات</p>
+            <!-- Left: Radar Chart (Performance Balance) -->
+            <div class="glass-panel p-6 lg:col-span-1">
+                <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-500"></span> توازن أداء الأقسام
+                </h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="radarChart"></canvas>
                 </div>
-
-                <!-- 2. التصميم -->
-                <div class="bento-card group flex flex-col items-center text-center hover:bg-cyan-900/30">
-                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold mb-3 border border-cyan-500/30 group-hover:scale-110 transition">2</div>
-                    <h3 class="font-bold text-sm">التصميم</h3>
-                    <p class="text-xs text-slate-400 mt-1">رسم هندسي & BOM</p>
-                </div>
-
-                <!-- 3. التخطيط -->
-                <div class="bento-card group flex flex-col items-center text-center hover:bg-purple-900/30">
-                    <div class="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-3 border border-purple-500/30 group-hover:scale-110 transition">3</div>
-                    <h3 class="font-bold text-sm">التخطيط</h3>
-                    <p class="text-xs text-slate-400 mt-1">توفير الخامات</p>
-                </div>
-
-                <!-- 4. التصنيع (مميز) -->
-                <div class="bento-card group flex flex-col items-center text-center bg-orange-500/10 border-orange-500/30">
-                    <div class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold mb-3 shadow-[0_0_15px_rgba(249,115,22,0.4)]">4</div>
-                    <h3 class="font-bold text-orange-400">التصنيع</h3>
-                    <p class="text-xs text-slate-300 mt-1">ليزر - تناية - خراطة</p>
-                </div>
-
-                <!-- 5. التجميع -->
-                <div class="bento-card group flex flex-col items-center text-center hover:bg-yellow-900/30">
-                    <div class="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center font-bold mb-3 border border-yellow-500/30 group-hover:scale-110 transition">5</div>
-                    <h3 class="font-bold text-sm">التجميع</h3>
-                    <p class="text-xs text-slate-400 mt-1">لحام & تركيب</p>
-                </div>
-
-                <!-- 6. الجودة -->
-                <div class="bento-card group flex flex-col items-center text-center hover:bg-red-900/30">
-                    <div class="w-10 h-10 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold mb-3 border border-red-500/30 group-hover:scale-110 transition">6</div>
-                    <h3 class="font-bold text-sm">الجودة</h3>
-                    <p class="text-xs text-slate-400 mt-1">اختبار الأداء</p>
-                </div>
-
-                <!-- 7. التسليم -->
-                <div class="bento-card group flex flex-col items-center text-center hover:bg-green-900/30">
-                    <div class="w-10 h-10 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold mb-3 border border-green-500/30 group-hover:scale-110 transition">7</div>
-                    <h3 class="font-bold text-sm">التسليم</h3>
-                    <p class="text-xs text-slate-400 mt-1">شحن للعميل</p>
-                </div>
-
+                <p class="text-xs text-slate-400 mt-4 text-center">يقارن هذا الرسم بين الأقسام الخمسة بناءً على تحقيق الأهداف الشهرية.</p>
             </div>
-        </div>
 
-        <!-- الصف الثاني: الرسوم البيانية (KPIs) -->
-        <div class="col-span-1 md:col-span-12 mt-4">
-            <h2 class="text-2xl font-bold text-white flex items-center gap-2 mb-6">
-                <span class="text-orange-400 text-3xl">📊</span> مؤشرات الأداء (KPIs)
+            <!-- Right: Production Trends (Combo Chart) -->
+            <div class="glass-panel p-6 lg:col-span-2">
+                <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-orange-500"></span> تحليل الإنتاج مقابل الهالك (شهري)
+                </h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="comboChart"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 2. DETAILED WORKFLOW (دورة العمل التفصيلية) -->
+        <section class="glass-panel p-8">
+            <h2 class="text-2xl font-bold text-white mb-8 border-b border-slate-700 pb-4">
+                المسار التشغيلي (Operational Workflow)
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                <!-- رسم 1: المكتب الفني -->
-                <div class="bento-card">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-bold text-slate-200">المكتب الفني</h3>
-                        <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Engineering</span>
-                    </div>
-                    <div class="h-48 relative w-full">
-                        <canvas id="chartEng"></canvas>
-                    </div>
-                </div>
-
-                <!-- رسم 2: الإنتاج -->
-                <div class="bento-card">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-bold text-slate-200">الإنتاج</h3>
-                        <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded">Production</span>
-                    </div>
-                    <div class="h-48 relative w-full">
-                        <canvas id="chartProd"></canvas>
-                    </div>
-                </div>
-
-                <!-- رسم 3: الدعم -->
-                <div class="bento-card">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-bold text-slate-200">الدعم (جودة/صيانة)</h3>
-                        <span class="text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded">Support</span>
-                    </div>
-                    <div class="h-48 relative w-full">
-                        <canvas id="chartSup"></canvas>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- الصف الثالث: الموارد البشرية (الجزاءات والمكافآت) -->
-        <div class="col-span-1 md:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
             
-            <!-- الجزاءات (المنطقة الحمراء) -->
-            <div class="bento-card border-l-4 border-l-red-500">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-2 bg-red-500/10 rounded-lg text-red-400 text-xl">⚠️</div>
-                    <h3 class="text-xl font-bold">الجزاءات والمخالفات</h3>
+            <div class="relative">
+                <!-- Connecting Line (Desktop Only) -->
+                <div class="hidden md:block absolute top-8 left-0 right-0 h-1 bg-slate-700 z-0"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 relative z-10">
+                    
+                    <!-- Step 1 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-cyan-500 transition">01</div>
+                        <h4 class="font-bold text-cyan-400 text-sm">استلام الطلب</h4>
+                        <p class="text-xs text-slate-400 mt-1">تحديد المواصفات</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-blue-500 transition">02</div>
+                        <h4 class="font-bold text-blue-400 text-sm">المكتب الفني</h4>
+                        <p class="text-xs text-slate-400 mt-1">CAD & BOM</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-purple-500 transition">03</div>
+                        <h4 class="font-bold text-purple-400 text-sm">المخازن</h4>
+                        <p class="text-xs text-slate-400 mt-1">صرف الخامات</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-orange-500 rounded-full flex items-center justify-center text-xl font-bold text-orange-500 mb-3 shadow-[0_0_15px_rgba(249,115,22,0.3)] relative z-10">04</div>
+                        <h4 class="font-bold text-orange-400 text-sm">القص والتشكيل</h4>
+                        <p class="text-xs text-slate-400 mt-1">ليزر & تناية</p>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-orange-500 rounded-full flex items-center justify-center text-xl font-bold text-orange-500 mb-3 shadow-[0_0_15px_rgba(249,115,22,0.3)] relative z-10">05</div>
+                        <h4 class="font-bold text-orange-400 text-sm">التشغيل الدقيق</h4>
+                        <p class="text-xs text-slate-400 mt-1">مخرطة & فريزة</p>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-yellow-500 transition">06</div>
+                        <h4 class="font-bold text-yellow-400 text-sm">التجميع</h4>
+                        <p class="text-xs text-slate-400 mt-1">ميكانيكا & كهرباء</p>
+                    </div>
+
+                    <!-- Step 7 -->
+                    <div class="step-item text-center">
+                        <div class="w-16 h-16 mx-auto bg-slate-800 border-2 border-slate-600 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3 shadow-lg relative z-10 group-hover:border-green-500 transition">07</div>
+                        <h4 class="font-bold text-green-400 text-sm">التسليم</h4>
+                        <p class="text-xs text-slate-400 mt-1">اختبار & شحن</p>
+                    </div>
+
                 </div>
+            </div>
+        </section>
+
+        <!-- 3. DEPARTMENT KPIS (Detailed Cards) -->
+        <section>
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <span class="text-cyan-500">📊</span> مؤشرات الأداء التفصيلية (KPI Breakdowns)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-red-500/30 transition">
-                        <span class="text-sm font-medium">مخالفة إدارية</span>
-                        <span class="text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded">خصم ربع يوم</span>
+                <!-- Engineering -->
+                <div class="glass-panel p-4">
+                    <h4 class="font-bold text-blue-400 text-sm mb-3 text-center">المكتب الفني</h4>
+                    <div class="h-32 relative"><canvas id="miniEng"></canvas></div>
+                    <div class="mt-3 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>دقة BOM</span>
+                            <span class="text-white font-bold">98%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-blue-500 h-1 rounded" style="width: 98%"></div></div>
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-red-500/30 transition">
-                        <span class="text-sm font-medium">تلف خامات (هالك)</span>
-                        <span class="text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded">تحمل 25% من التكلفة</span>
+                </div>
+
+                <!-- Production -->
+                <div class="glass-panel p-4">
+                    <h4 class="font-bold text-orange-400 text-sm mb-3 text-center">الإنتاج</h4>
+                    <div class="h-32 relative"><canvas id="miniProd"></canvas></div>
+                    <div class="mt-3 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>الالتزام</span>
+                            <span class="text-white font-bold">94%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-orange-500 h-1 rounded" style="width: 94%"></div></div>
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-red-500/50 transition">
-                        <span class="text-sm font-bold text-red-400">خطأ جسيم / رفض</span>
-                        <span class="text-xs bg-red-600 text-white px-2 py-1 rounded font-bold">تحقيق فوري</span>
+                </div>
+
+                <!-- Finance -->
+                <div class="glass-panel p-4">
+                    <h4 class="font-bold text-purple-400 text-sm mb-3 text-center">الحسابات</h4>
+                    <div class="h-32 relative"><canvas id="miniFin"></canvas></div>
+                    <div class="mt-3 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>ضبط التكلفة</span>
+                            <span class="text-white font-bold">99%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-purple-500 h-1 rounded" style="width: 99%"></div></div>
+                    </div>
+                </div>
+
+                <!-- Quality -->
+                <div class="glass-panel p-4">
+                    <h4 class="font-bold text-green-400 text-sm mb-3 text-center">الجودة</h4>
+                    <div class="h-32 relative"><canvas id="miniQual"></canvas></div>
+                    <div class="mt-3 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>خلو العيوب</span>
+                            <span class="text-white font-bold">97%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-green-500 h-1 rounded" style="width: 97%"></div></div>
+                    </div>
+                </div>
+
+                <!-- Maintenance -->
+                <div class="glass-panel p-4">
+                    <h4 class="font-bold text-red-400 text-sm mb-3 text-center">الصيانة</h4>
+                    <div class="h-32 relative"><canvas id="miniMaint"></canvas></div>
+                    <div class="mt-3 space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>استجابة</span>
+                            <span class="text-white font-bold">95%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1 rounded"><div class="bg-red-500 h-1 rounded" style="width: 95%"></div></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. HR POLICY (Formal Table) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Penalties Table -->
+            <div class="glass-panel p-6 border-t-4 border-t-red-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">لائحة المخالفات والجزاءات</h3>
+                    <span class="bg-red-500/10 text-red-400 text-xs px-2 py-1 rounded">System: Strict</span>
+                </div>
+                <table class="w-full text-sm text-right">
+                    <thead class="text-slate-500 border-b border-slate-700">
+                        <tr>
+                            <th class="pb-2">نوع المخالفة</th>
+                            <th class="pb-2">المسؤول</th>
+                            <th class="pb-2">الإجراء / الجزاء</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-300 divide-y divide-slate-800">
+                        <tr>
+                            <td class="py-3">خطأ في التصميم (BOM/CAD)</td>
+                            <td class="text-blue-400">مهندس</td>
+                            <td class="text-red-400">تحمل تكلفة الخامة</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3">تلف خامة أثناء التشغيل</td>
+                            <td class="text-orange-400">فني/عامل</td>
+                            <td class="text-red-400">تحمل نسبة من الهالك</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3">تأخير في التسليم (بدون عذر)</td>
+                            <td class="text-slate-400">مدير القسم</td>
+                            <td class="text-yellow-400">لفت نظر / خصم</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Incentives Table -->
+            <div class="glass-panel p-6 border-t-4 border-t-green-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">نظام المكافآت والحوافز</h3>
+                    <span class="bg-green-500/10 text-green-400 text-xs px-2 py-1 rounded">System: Performance</span>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 bg-green-500/5 p-3 rounded border border-green-500/10">
+                        <div class="text-2xl">🏆</div>
+                        <div>
+                            <div class="font-bold text-green-400">حافز الجودة (Zero Defect)</div>
+                            <div class="text-xs text-slate-400">مكافأة شهرية عند عدم وجود أي مرتجعات أو توالف.</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 bg-blue-500/5 p-3 rounded border border-blue-500/10">
+                        <div class="text-2xl">💡</div>
+                        <div>
+                            <div class="font-bold text-blue-400">حافز التطوير (Innovation)</div>
+                            <div class="text-xs text-slate-400">مكافأة خاصة لأي فكرة توفر في الخامات أو الوقت.</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- المكافآت (المنطقة الخضراء) -->
-            <div class="bento-card border-l-4 border-l-green-500 bg-gradient-to-br from-green-900/10 to-transparent">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-2 bg-green-500/10 rounded-lg text-green-400 text-xl">🎁</div>
-                    <h3 class="text-xl font-bold">المكافآت والحوافز</h3>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- مكافأة 1 -->
-                    <div class="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center hover:bg-green-500/20 transition cursor-pointer">
-                        <div class="text-2xl mb-1">🏆</div>
-                        <h4 class="font-bold text-green-400 text-sm">حافز صفر أخطاء</h4>
-                        <p class="text-xs text-slate-400 mt-1">مكافأة شهرية</p>
-                    </div>
-
-                    <!-- مكافأة 2 -->
-                    <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center hover:bg-blue-500/20 transition cursor-pointer">
-                        <div class="text-2xl mb-1">💡</div>
-                        <h4 class="font-bold text-blue-400 text-sm">حافز الوفر</h4>
-                        <p class="text-xs text-slate-400 mt-1">تقليل الهالك</p>
-                    </div>
-                </div>
-                
-                <div class="mt-4 p-3 bg-white/5 rounded-lg text-center">
-                    <p class="text-xs text-slate-400">يتم صرف المكافآت مع الراتب الشهري بناءً على تقارير الأداء.</p>
-                </div>
-            </div>
-
-        </div>
+        </section>
 
     </main>
 
-    <!-- الفوتر وزر الطباعة -->
-    <footer class="max-w-7xl mx-auto mt-12 mb-8 flex justify-between items-center text-slate-500 text-sm px-4">
-        <div>© 2026 IMSY Manufacturing System</div>
-        <button onclick="window.print()" class="no-print bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-cyan-500/20 transition flex items-center gap-2">
-            <span>طباعة</span>
+    <footer class="max-w-7xl mx-auto mt-12 mb-8 flex justify-between items-center border-t border-slate-800 pt-6">
+        <div class="text-xs text-slate-500">
+            © 2026 IMSY Management System. All rights reserved.<br>
+            Confidential Document for Internal Use Only.
+        </div>
+        <button onclick="window.print()" class="no-print bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2">
+            <span>طباعة التقرير</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
         </button>
     </footer>
 
-    <!-- إعدادات الرسوم البيانية (JS) -->
+    <!-- Charts Configuration -->
     <script>
-        // ضبط ألوان الوضع الداكن للرسوم البيانية
-        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.color = '#64748b';
         Chart.defaults.font.family = 'Cairo';
-        
-        const commonOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 15 } }
-            },
-            elements: { arc: { borderWidth: 0 } }
-        };
 
-        // 1. رسم المكتب الفني
-        new Chart(document.getElementById('chartEng'), {
-            type: 'doughnut',
+        // 1. Radar Chart (Department Health)
+        new Chart(document.getElementById('radarChart'), {
+            type: 'radar',
             data: {
-                labels: ['الدقة', 'السرعة', 'التطوير'],
+                labels: ['الدقة', 'السرعة', 'التكلفة', 'الجودة', 'السلامة'],
                 datasets: [{
-                    data: [40, 30, 30],
-                    backgroundColor: ['#06b6d4', '#22d3ee', '#67e8f9'],
-                    hoverOffset: 10
-                }]
-            },
-            options: { ...commonOptions, cutout: '70%' }
-        });
-
-        // 2. رسم الإنتاج
-        new Chart(document.getElementById('chartProd'), {
-            type: 'pie',
-            data: {
-                labels: ['الالتزام', 'الهالك', 'الكفاءة'],
-                datasets: [{
-                    data: [40, 30, 30],
-                    backgroundColor: ['#f97316', '#fb923c', '#fdba74'],
-                    hoverOffset: 10
-                }]
-            },
-            options: commonOptions
-        });
-
-        // 3. رسم الدعم
-        new Chart(document.getElementById('chartSup'), {
-            type: 'bar',
-            data: {
-                labels: ['مرتجع', 'داخلي', 'صيانة', 'وقائي'],
-                datasets: [{
-                    label: 'الوزن %',
-                    data: [50, 50, 50, 50],
-                    backgroundColor: ['#ef4444', '#f87171', '#8b5cf6', '#a78bfa'],
-                    borderRadius: 4
+                    label: 'الأداء الحالي',
+                    data: [95, 88, 92, 96, 90],
+                    backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                    borderColor: '#06b6d4',
+                    pointBackgroundColor: '#fff',
                 }]
             },
             options: {
-                ...commonOptions,
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: { 
-                        display: false, 
-                        grid: { display: false } 
-                    },
-                    x: { 
-                        grid: { display: false, drawBorder: false } 
+                    r: {
+                        angleLines: { color: '#1e293b' },
+                        grid: { color: '#1e293b' },
+                        pointLabels: { color: '#94a3b8', font: { size: 12 } },
+                        suggestedMin: 50,
+                        suggestedMax: 100
                     }
-                },
+                }
+            }
+        });
+
+        // 2. Combo Chart (Production vs Scrap)
+        new Chart(document.getElementById('comboChart'), {
+            type: 'bar',
+            data: {
+                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                datasets: [
+                    {
+                        label: 'عدد الوحدات المنتجة',
+                        data: [120, 135, 125, 145, 150, 160],
+                        backgroundColor: '#3b82f6',
+                        order: 2
+                    },
+                    {
+                        label: 'معدل الهالك (%)',
+                        data: [5, 4.5, 6, 3, 2.5, 2],
+                        type: 'line',
+                        borderColor: '#f97316',
+                        borderWidth: 3,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: '#1e293b' } },
+                    y1: { position: 'right', grid: { display: false }, suggestedMax: 10 }
+                }
+            }
+        });
+
+        // 3. Mini Doughnut Charts Config
+        const miniConfig = (color) => ({
+            type: 'doughnut',
+            data: {
+                labels: ['Done', 'Pending'],
+                datasets: [{ data: [85, 15], backgroundColor: [color, '#1e293b'], borderWidth: 0 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
                 plugins: { legend: { display: false } }
             }
         });
+
+        new Chart(document.getElementById('miniEng'), miniConfig('#3b82f6'));
+        new Chart(document.getElementById('miniProd'), miniConfig('#f97316'));
+        new Chart(document.getElementById('miniFin'), miniConfig('#8b5cf6'));
+        new Chart(document.getElementById('miniQual'), miniConfig('#10b981'));
+        new Chart(document.getElementById('miniMaint'), miniConfig('#ef4444'));
+
     </script>
 </body>
 </html>
