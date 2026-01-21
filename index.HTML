@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMSY | نظام إدارة المصنع المتقدم</title>
+    <title>IMSY | نظام إدارة المهندسين والتقارير</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -17,9 +17,6 @@
                     colors: {
                         dark: { 900: '#0b1121', 800: '#151e32', 700: '#2a3b55' },
                         brand: { cyan: '#06b6d4', blue: '#3b82f6', orange: '#f97316', green: '#10b981', red: '#ef4444', yellow: '#eab308' }
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
@@ -27,6 +24,7 @@
     </script>
 
     <style>
+        /* --- Screen Styles --- */
         body {
             background-color: #0b1121;
             background-image: 
@@ -35,7 +33,6 @@
             color: #e2e8f0;
         }
 
-        /* Premium Glass Card */
         .glass-card {
             background: rgba(21, 30, 50, 0.75);
             backdrop-filter: blur(16px);
@@ -43,622 +40,663 @@
             border-radius: 1rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
         }
         .glass-card:hover {
             transform: translateY(-4px);
             border-color: rgba(6, 182, 212, 0.3);
             box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
         }
-        .glass-card:hover::before { opacity: 1; }
 
-        /* Modal Styles */
+        /* --- Modal Styles --- */
         .modal-overlay {
             position: fixed; inset: 0;
-            background: rgba(11, 17, 33, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 50;
-            display: none;
-            justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.3s ease;
-        }
-        .modal-overlay.active { display: flex; opacity: 1; }
-        
-        .modal-content {
-            background: #151e32;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1.5rem;
-            width: 95%; max-width: 1000px; max-height: 90vh;
+            background: rgba(11, 17, 33, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 50; display: none;
+            justify-content: center; align-items: flex-start;
+            padding-top: 2rem; padding-bottom: 2rem;
             overflow-y: auto;
-            transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #151e32; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1.5rem; width: 95%; max-width: 1200px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .modal-overlay.active .modal-content { transform: scale(1); }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0b1121; }
-        ::-webkit-scrollbar-thumb { background: #2a3b55; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        /* Sliders */
-        input[type=range] {
-            -webkit-appearance: none; width: 100%; background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-            background: #fff; cursor: pointer; margin-top: -7px;
-            box-shadow: 0 0 10px rgba(255,255,255,0.3); border: 2px solid #0f172a;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
+            margin: auto; min-height: 80vh;
         }
 
-        .editable-active {
-            outline: 2px dashed #06b6d4; background: rgba(6, 182, 212, 0.05); padding: 2px 4px; border-radius: 4px;
+        .table-input {
+            background: transparent; border: 1px solid transparent; width: 100%; color: white;
+            text-align: center; padding: 6px; outline: none; border-radius: 4px;
         }
+        .table-input:focus, .table-input:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
         
-        /* Toast Notification */
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #10b981;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 100;
-            left: 50%;
-            bottom: 30px;
-            transform: translateX(-50%);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s;
-        }
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 50px;
+        .editable-active { outline: 2px dashed #06b6d4; background: rgba(6, 182, 212, 0.1); }
+
+        /* --- PRINT STYLES --- */
+        @media print {
+            body { background: white !important; color: black !important; font-size: 10pt; }
+            .no-print, #editBtn, header button, .add-row-btn, .remove-row-btn, .nav-btn { display: none !important; }
+            
+            /* Print Specific Visibility */
+            .print-only { display: block !important; }
+            .screen-only { display: none !important; }
+
+            /* Modal Logic for Print */
+            body.modal-open > *:not(.modal-overlay) { display: none !important; }
+            body.modal-open .modal-overlay { 
+                position: static; background: white; display: block; overflow: visible; padding: 0;
+            }
+            body.modal-open .modal-content {
+                width: 100%; max-width: none; border: none; box-shadow: none; background: white; color: black; margin: 0; min-height: auto;
+            }
+            
+            /* Table Styling */
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: avoid; }
+            th, td { border: 1px solid #000 !important; padding: 6px; text-align: center; color: black !important; }
+            th { background-color: #f0f0f0 !important; font-weight: bold; }
+            
+            /* Reset Colors */
+            .text-white { color: black !important; }
+            .text-slate-400 { color: #333 !important; }
+            .bg-slate-800, .bg-slate-900, .glass-card { background: white !important; border: 1px solid #ccc !important; }
+            
+            /* Report Sections */
+            .engineer-report-page { page-break-after: always; margin-bottom: 2rem; border-bottom: 1px dashed #ccc; padding-bottom: 2rem; }
+            .engineer-report-page:last-child { page-break-after: auto; }
+
+            canvas { max-height: 400px !important; width: 100% !important; filter: none !important; }
         }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 antialiased">
 
-    <!-- Header Area -->
-    <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700/50 pb-6">
-        <div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse-slow"></span>
-                <span class="text-xs font-mono text-cyan-500 tracking-wider">IMSY PRODUCTION SYSTEM v3.0</span>
-            </div>
-            <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight editable-text" data-id="main-title">
-                نظام إدارة مصنع <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">IMSY</span>
-            </h1>
-            <p class="text-slate-400 mt-1 editable-text text-sm md:text-base" data-id="main-subtitle">لوحة القيادة المركزية: مراقبة الأداء، الجودة، والعمليات التشغيلية</p>
+    <!-- Top Control Bar -->
+    <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center bg-slate-800/80 p-4 rounded-2xl border border-slate-700 no-print">
+        <div class="flex items-center gap-4">
+            <label class="text-sm text-slate-400">📅 الشهر:</label>
+            <select id="monthSelector" onchange="changeMonth()" class="bg-slate-900 text-white border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"></select>
+            <button onclick="createNewMonth()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg text-sm font-bold transition">+ شهر جديد</button>
         </div>
-        
-        <div class="flex items-center gap-3">
-            <div class="text-right hidden md:block mr-4">
-                <div class="text-xs text-slate-500">حالة النظام</div>
-                <div class="font-bold text-green-400 text-sm">متصل ومستقر</div>
+
+        <div class="flex gap-3 mt-4 md:mt-0">
+            <button onclick="toggleEditMode()" id="editBtn" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold transition"><span>✏️</span> تعديل النصوص</button>
+            <button onclick="window.print()" class="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold transition"><span>🖨️</span> طباعة عامة</button>
+            <button onclick="resetCurrentMonth()" class="bg-red-900/50 hover:bg-red-900 text-red-200 px-3 py-2 rounded-lg text-sm transition">🗑️ حذف</button>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="max-w-7xl mx-auto mb-8 border-b border-slate-700 pb-6">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-black text-white tracking-tight editable-text" data-id="main-title">
+                    نظام إدارة مصنع <span class="text-cyan-500 print:text-black">IMSY</span>
+                </h1>
+                <p class="text-slate-400 mt-1 editable-text" data-id="main-subtitle">التقرير الشهري للأداء والعمليات التشغيلية</p>
             </div>
-            <button onclick="toggleEditMode()" id="editBtn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg">
-                <span class="text-lg">⚙️</span>
-                <span>تعديل البيانات</span>
-            </button>
+            <div class="text-left">
+                <div class="text-sm text-slate-500">الفترة</div>
+                <div class="text-2xl font-bold text-white print:text-black" id="displayPeriod">يناير 2026</div>
+            </div>
         </div>
     </header>
 
-    <!-- Main Overview (Radar Chart) -->
+    <!-- Overview Section (REINSTATED) -->
     <section class="max-w-7xl mx-auto mb-8">
-        <div class="glass-card p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
-            <div class="w-full md:w-1/3">
-                <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                    <span class="text-cyan-400">📊</span> نظرة عامة على الأداء
-                </h2>
-                <p class="text-slate-400 text-sm mb-6 leading-relaxed editable-text" data-id="radar-desc">
-                    مقارنة حية لأداء الأقسام الخمسة الرئيسية. يوضح الرسم البياني نقاط القوة (القمم) وفرص التحسين (الانخفاضات) في الوقت الفعلي.
-                </p>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                        <div class="text-xs text-slate-500">الكفاءة الكلية</div>
-                        <div class="text-xl font-bold text-white" id="overallScore">92%</div>
-                    </div>
-                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                        <div class="text-xs text-slate-500">حالة الإنتاج</div>
-                        <div class="text-xl font-bold text-green-400">ممتاز</div>
+        <div class="glass-card p-6 md:p-8">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="w-full md:w-1/3">
+                    <h2 class="text-2xl font-bold text-white mb-4">📊 تحليل الأداء العام</h2>
+                    <div class="space-y-4">
+                        <div class="bg-slate-900/50 print:bg-gray-100 p-4 rounded-lg border border-slate-700 print:border-gray-300">
+                            <div class="text-sm text-slate-400">معدل الكفاءة الكلي</div>
+                            <div class="text-3xl font-bold text-cyan-400 print:text-black" id="overallScore">0%</div>
+                        </div>
+                        <div class="p-4 rounded-lg border border-dashed border-slate-600">
+                            <div class="text-sm text-slate-400 mb-1">ملاحظات الإدارة:</div>
+                            <p class="text-sm text-white editable-text print:text-black" data-id="manager-notes">
+                                اضغط هنا لكتابة ملخص تنفيذي عن حالة المصنع هذا الشهر...
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="w-full md:w-2/3 h-64 md:h-72 relative">
-                <canvas id="mainRadarChart"></canvas>
+                <div class="w-full md:w-2/3 h-64">
+                    <canvas id="mainRadarChart"></canvas>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Departments Grid -->
     <main class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-
-        <!-- 1. Technical Office -->
-        <div class="glass-card p-6 group" onclick="openModal('tech')">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-2xl group-hover:bg-blue-500/20 transition text-blue-400">📐</div>
-                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Engineering</div>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="tech-title">المكتب الفني</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="tech-desc">التصميمات (CAD)، الرسومات التنفيذية (Shop Drawings)، وحصر المواد (BOM).</p>
-            <div class="flex items-center gap-2 text-xs font-mono text-blue-400">
-                <span>●</span> انقر للتفاصيل والتعديل
-            </div>
-        </div>
-
-        <!-- 2. Production -->
-        <div class="glass-card p-6 group" onclick="openModal('prod')">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-2xl group-hover:bg-orange-500/20 transition text-orange-400">⚙️</div>
-                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Fabrication</div>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="prod-title">الإنتاج والتصنيع</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="prod-desc">قص الليزر، التناية، الخراطة، الفريزة، والتجميع النهائي للماكينات.</p>
-            <div class="flex items-center gap-2 text-xs font-mono text-orange-400">
-                <span>●</span> انقر للتفاصيل والتعديل
-            </div>
-        </div>
-
-        <!-- 3. Quality Control -->
-        <div class="glass-card p-6 group" onclick="openModal('qual')">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-2xl group-hover:bg-green-500/20 transition text-green-400">🛡️</div>
-                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">QC & QA</div>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="qual-title">مراقبة الجودة</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="qual-desc">فحص الأبعاد، اختبارات الأداء الوظيفي، وتقارير عدم المطابقة (NCR).</p>
-            <div class="flex items-center gap-2 text-xs font-mono text-green-400">
-                <span>●</span> انقر للتفاصيل والتعديل
-            </div>
-        </div>
-
-        <!-- 4. Maintenance -->
-        <div class="glass-card p-6 group" onclick="openModal('maint')">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-2xl group-hover:bg-red-500/20 transition text-red-400">🔧</div>
-                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Maintenance</div>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="maint-title">الصيانة والدعم</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="maint-desc">الصيانة الوقائية (Preventive)، الإصلاح الطارئ، وتوافر قطع الغيار.</p>
-            <div class="flex items-center gap-2 text-xs font-mono text-red-400">
-                <span>●</span> انقر للتفاصيل والتعديل
-            </div>
-        </div>
-
-        <!-- 5. HSE (Safety) -->
-        <div class="glass-card p-6 group" onclick="openModal('safety')">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center text-2xl group-hover:bg-yellow-500/20 transition text-yellow-400">🦺</div>
-                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Safety First</div>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2 editable-text" data-id="safety-title">السلامة والصحة المهنية</h3>
-            <p class="text-sm text-slate-400 mb-4 line-clamp-2 editable-text" data-id="safety-desc">الالتزام بمهمات الوقاية (PPE)، تحليل المخاطر، وسجلات الحوادث.</p>
-            <div class="flex items-center gap-2 text-xs font-mono text-yellow-400">
-                <span>●</span> انقر للتفاصيل والتعديل
-            </div>
-        </div>
-
-        <!-- 6. HR & Admin -->
-        <div class="glass-card p-6 group flex flex-col items-center justify-center border-dashed border-2 border-slate-700 bg-transparent hover:bg-slate-800/30">
-            <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-2xl text-slate-500 mb-3 group-hover:text-white transition">📂</div>
-            <h3 class="text-lg font-bold text-slate-500 group-hover:text-white transition editable-text" data-id="hr-title">تقارير الموارد البشرية</h3>
-            <p class="text-xs text-slate-600 mt-1 editable-text" data-id="hr-desc">الجزاءات والمكافآت (قريباً)</p>
-        </div>
-
+        <!-- Generated by JS -->
     </main>
 
-    <!-- Modal (Detail View) -->
+    <!-- Modal Container -->
     <div id="modalOverlay" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-content p-6 md:p-10" onclick="event.stopPropagation()">
             
             <!-- Modal Header -->
-            <div class="flex justify-between items-start mb-8 border-b border-slate-700 pb-6">
+            <div class="flex justify-between items-start mb-6 border-b border-slate-700 pb-4 no-print">
                 <div>
-                    <h2 id="modalTitle" class="text-3xl font-black text-white editable-text mb-2" data-id="modal-title">اسم القسم</h2>
-                    <p id="modalDesc" class="text-slate-400 text-sm md:text-base editable-text" data-id="modal-desc">الوصف التفصيلي...</p>
+                    <h2 id="modalTitle" class="text-3xl font-black text-white mb-1"></h2>
+                    <p class="text-slate-400 text-sm">لوحة التحكم والبيانات</p>
                 </div>
-                <button onclick="document.getElementById('modalOverlay').classList.remove('active')" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">✕</button>
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"><span>🖨️</span> طباعة التقرير</button>
+                    <button onclick="closeModalBtn()" class="text-2xl text-slate-400 hover:text-white ml-4 bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center">✕</button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <!-- Right Column: Tasks & Details (Span 7) -->
-                <div class="lg:col-span-7 space-y-6">
-                    <div>
-                        <h4 class="font-bold text-white mb-4 flex items-center gap-2 text-lg">
-                            <span class="text-cyan-400">📋</span> المهام والمسؤوليات (Responsibilities)
-                        </h4>
-                        <div id="modalTasks" class="grid gap-3">
-                            <!-- Tasks injected via JS -->
-                        </div>
-                    </div>
-                    
-                    <div class="bg-slate-900/50 rounded-xl p-5 border border-slate-700">
-                        <h5 class="text-sm font-bold text-slate-300 mb-2">⚠️ ملاحظات هامة:</h5>
-                        <p class="text-sm text-slate-400 leading-relaxed editable-text" data-id="modal-note">
-                            يجب الالتزام بالمعايير القياسية (ISO) في جميع مراحل العمل. أي حيود عن المواصفات يتطلب تقرير رسمي.
-                        </p>
-                    </div>
-                </div>
+            <!-- Modal Body (Dynamic Injection) -->
+            <div id="modalBody"></div>
 
-                <!-- Left Column: KPI Adjustments (Span 5) -->
-                <div class="lg:col-span-5 bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-xl h-fit">
-                    <h4 class="font-bold text-white mb-6 flex items-center gap-2 text-lg">
-                        <span class="text-cyan-400">⚙️</span> ضبط مؤشرات الأداء (KPIs)
-                    </h4>
-                    
-                    <!-- Chart -->
-                    <div class="h-48 relative mb-8">
-                        <canvas id="modalChart"></canvas>
-                    </div>
-
-                    <!-- Sliders -->
-                    <div id="slidersContainer" class="space-y-6">
-                        <!-- Sliders injected via JS -->
-                    </div>
-                </div>
-
-            </div>
         </div>
     </div>
 
-    <footer class="max-w-7xl mx-auto mb-4 border-t border-slate-700 pt-4 flex justify-between items-center text-xs text-slate-500 px-4">
-        <span>© IMSY Dashboard System</span>
-        <button onclick="resetAllData()" class="text-red-500 hover:text-red-400 transition">⚠ استعادة الإعدادات الافتراضية</button>
-    </footer>
-
-    <!-- Toast Notification -->
-    <div id="toast">تم حفظ التغييرات بنجاح!</div>
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50">تم الحفظ!</div>
 
     <script>
-        // --- DATA & STATE MANAGEMENT ---
-        
-        // Default Data
-        const defaultDeptData = {
-            'tech': {
-                title: 'المكتب الفني (Technical Office)',
-                desc: 'العقل المدبر للإنتاج: مسؤول عن تحويل متطلبات العميل إلى رسومات تنفيذية وخطط إنتاج.',
-                color: '#3b82f6',
-                kpiLabels: ['دقة الـ BOM', 'جودة الرسومات', 'التسليم في الموعد'],
-                kpiValues: [95, 90, 85],
-                tasks: [
-                    'إعداد الرسومات التنفيذية (Shop Drawings) وملفات التشغيل (DXF/G-Code).',
-                    'إعداد قوائم المواد (Bill of Materials - BOM) بدقة لتحديد المشتريات.',
-                    'مراجعة التصميمات هندسياً لضمان قابلية التصنيع (Design for Manufacturing).',
-                    'أرشفة الرسومات وتحديث النسخ (Version Control).'
-                ]
+        // --- 1. CONFIGURATION ---
+        const defaultDeptStructure = {
+            'tech': { 
+                title: 'المكتب الفني', icon: '📐', color: '#3b82f6', 
+                engineers: [], // Array of objects
+                kpiLabels: ['دقة التصميم', 'الإنجاز'], values: [85, 90] 
             },
-            'prod': {
-                title: 'الإنتاج والتصنيع (Production)',
-                desc: 'تنفيذ العمليات الصناعية لتحويل الخامات إلى منتج نهائي وفقاً للمواصفات.',
-                color: '#f97316',
-                kpiLabels: ['الالتزام بالخطة', 'كفاءة التشغيل', 'تقليل الهالك'],
-                kpiValues: [92, 88, 94],
-                tasks: [
-                    'تشغيل ماكينات القص بالليزر (Laser Cutting) بدقة عالية.',
-                    'عمليات الثني والتشكيل على التناية (CNC Bending).',
-                    'التشغيل الميكانيكي الدقيق: خراطة (Lathe) وفريزة (Milling).',
-                    'أعمال اللحام (TIG/MIG) والتجميع النهائي للماكينة.'
-                ]
+            'prod': { 
+                title: 'الإنتاج', icon: '⚙️', color: '#f97316', 
+                kpiLabels: ['الخطة', 'الكفاءة', 'الهالك'], values: [90, 85, 95],
+                tasks: ['Laser Cutting', 'Bending', 'Assembly'], notes: '...'
             },
-            'qual': {
-                title: 'مراقبة وتكيد الجودة (QC/QA)',
-                desc: 'الجهة الرقابية لضمان مطابقة المنتج للمواصفات والمعايير العالمية.',
-                color: '#10b981',
-                kpiLabels: ['معدل القبول', 'سرعة الفحص', 'رضا العميل'],
-                kpiValues: [96, 92, 95],
-                tasks: [
-                    'فحص الخامات الواردة (In-coming QC) والتأكد من شهادات المنشأ.',
-                    'الفحص أثناء العمليات (In-process QC) لضبط الأبعاد.',
-                    'اختبارات الأداء الوظيفي للماكينة قبل التسليم (FAT).',
-                    'تحليل أسباب العيوب (Root Cause Analysis) وإصدار الإجراءات التصحيحية.'
-                ]
+            'qual': { 
+                title: 'الجودة', icon: '🛡️', color: '#10b981', 
+                kpiLabels: ['القبول', 'الفحص', 'العميل'], values: [95, 92, 98],
+                tasks: ['Incoming QC', 'Final QC'], notes: '...'
             },
-            'maint': {
-                title: 'الصيانة والدعم الفني',
-                desc: 'الحفاظ على الأصول والمعدات وضمان استمرارية التشغيل.',
-                color: '#ef4444',
-                kpiLabels: ['الاستجابة للأعطال', 'الصيانة الوقائية', 'جاهزية المعدات'],
-                kpiValues: [90, 95, 98],
-                tasks: [
-                    'تنفيذ خطة الصيانة الوقائية (Preventive Maintenance Schedule).',
-                    'الاستجابة الفورية للأعطال الطارئة (Corrective Maintenance).',
-                    'إدارة مخزون قطع الغيار الحرجة (Spare Parts Management).',
-                    'معايرة أجهزة القياس والماكينات بشكل دوري.'
-                ]
+            'maint': { 
+                title: 'الصيانة', icon: '🔧', color: '#ef4444', 
+                kpiLabels: ['الاستجابة', 'الوقائية'], values: [88, 90],
+                tasks: ['Preventive', 'Corrective'], notes: '...'
             },
-            'safety': {
-                title: 'السلامة والصحة المهنية (HSE)',
-                desc: 'توفير بيئة عمل آمنة، حماية العاملين، والامتثال للوائح السلامة.',
-                color: '#eab308',
-                kpiLabels: ['الالتزام بالـ PPE', 'ساعات بدون حوادث', 'التدريب'],
-                kpiValues: [98, 100, 92],
-                tasks: [
-                    'التأكد من ارتداء مهمات الوقاية الشخصية (PPE) لجميع العاملين.',
-                    'تقييم المخاطر (Risk Assessment) قبل بدء أي عملية جديدة.',
-                    'التفتيش الدوري على طفايات الحريق ومعدات السلامة.',
-                    'عقد دورات توعية وتدريب على إجراءات الطوارئ.'
-                ]
+            'safety': { 
+                title: 'السلامة', icon: '🦺', color: '#eab308', 
+                kpiLabels: ['PPE', 'الحوادث'], values: [98, 100],
+                tasks: ['PPE Check', 'Training'], notes: '...'
             }
         };
 
-        // Active Data
-        let deptData = JSON.parse(JSON.stringify(defaultDeptData));
+        // --- 2. DB MANAGEMENT (V6) ---
+        let db = JSON.parse(localStorage.getItem('IMSY_DB_V6')) || {};
+        let currentMonthKey = localStorage.getItem('IMSY_CURRENT_MONTH_V6');
 
-        // Load Data from Local Storage on Start
-        window.addEventListener('load', () => {
-            loadFromStorage();
-            updateRadarChart();
-        });
+        if (Object.keys(db).length === 0) {
+            const now = new Date();
+            const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            db[key] = { depts: JSON.parse(JSON.stringify(defaultDeptStructure)), texts: {} };
+            currentMonthKey = key;
+            saveDB();
+        }
+        if (!currentMonthKey || !db[currentMonthKey]) currentMonthKey = Object.keys(db).sort().pop();
 
-        // Save Function
-        function saveToStorage() {
-            // Save KPI Data
-            localStorage.setItem('IMSY_DEPT_DATA', JSON.stringify(deptData));
-
-            // Save Editable Text
-            const textData = {};
-            document.querySelectorAll('.editable-text').forEach(el => {
-                const id = el.getAttribute('data-id');
-                if (id) {
-                    textData[id] = el.innerHTML;
-                }
-            });
-            localStorage.setItem('IMSY_TEXT_DATA', JSON.stringify(textData));
-            
+        function saveDB() {
+            localStorage.setItem('IMSY_DB_V6', JSON.stringify(db));
+            localStorage.setItem('IMSY_CURRENT_MONTH_V6', currentMonthKey);
             showToast();
         }
+        function getCurrentData() { return db[currentMonthKey]; }
+        function showToast() { const t = document.getElementById('toast'); t.style.opacity='1'; setTimeout(()=>t.style.opacity='0', 1000); }
+        function init() { renderMonthSelector(); renderDashboard(); }
 
-        // Load Function
-        function loadFromStorage() {
-            // Load KPI Data
-            const storedDeptData = localStorage.getItem('IMSY_DEPT_DATA');
-            if (storedDeptData) {
-                deptData = JSON.parse(storedDeptData);
-            }
+        // --- 3. RENDERING DASHBOARD ---
+        let mainRadarChartInstance = null;
 
-            // Load Editable Text
-            const storedTextData = localStorage.getItem('IMSY_TEXT_DATA');
-            if (storedTextData) {
-                const textData = JSON.parse(storedTextData);
-                document.querySelectorAll('.editable-text').forEach(el => {
-                    const id = el.getAttribute('data-id');
-                    if (id && textData[id]) {
-                        el.innerHTML = textData[id];
-                    }
-                });
-            }
-        }
-
-        // Reset Function
-        function resetAllData() {
-            if (confirm('هل أنت متأكد من استعادة البيانات الافتراضية؟ سيتم مسح جميع تعديلاتك.')) {
-                localStorage.removeItem('IMSY_DEPT_DATA');
-                localStorage.removeItem('IMSY_TEXT_DATA');
-                location.reload();
-            }
-        }
-
-        function showToast() {
-            const toast = document.getElementById("toast");
-            toast.className = "show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-        }
-
-
-        // --- CHART LOGIC ---
-
-        // Initialize Radar Chart
-        const mainRadarCtx = document.getElementById('mainRadarChart').getContext('2d');
-        const mainRadarChart = new Chart(mainRadarCtx, {
-            type: 'radar',
-            data: {
-                labels: ['المكتب الفني', 'الإنتاج', 'الجودة', 'الصيانة', 'السلامة'],
-                datasets: [{
-                    label: 'مستوى الأداء الحالي',
-                    data: [85, 92, 96, 90, 98], // Initial values (will be overwritten by load)
-                    backgroundColor: 'rgba(6, 182, 212, 0.2)',
-                    borderColor: '#06b6d4',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#06b6d4',
-                    pointHoverBackgroundColor: '#06b6d4',
-                    pointHoverBorderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        pointLabels: { 
-                            color: '#94a3b8', 
-                            font: { family: 'Cairo', size: 12, weight: 'bold' } 
-                        },
-                        ticks: { display: false, backdropColor: 'transparent' },
-                        suggestedMin: 50,
-                        suggestedMax: 100
-                    }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-
-        function updateRadarChart() {
-            // Calculate averages from current deptData
-            const averages = [
-                deptData['tech'].kpiValues.reduce((a, b) => a + b, 0) / 3,
-                deptData['prod'].kpiValues.reduce((a, b) => a + b, 0) / 3,
-                deptData['qual'].kpiValues.reduce((a, b) => a + b, 0) / 3,
-                deptData['maint'].kpiValues.reduce((a, b) => a + b, 0) / 3,
-                deptData['safety'].kpiValues.reduce((a, b) => a + b, 0) / 3
-            ];
+        function renderDashboard() {
+            const data = getCurrentData();
+            document.getElementById('displayPeriod').innerText = currentMonthKey;
             
-            mainRadarChart.data.datasets[0].data = averages;
-            mainRadarChart.update();
+            // 1. Render Chart
+            updateMainRadarChart(data);
 
-            const totalAvg = averages.reduce((a, b) => a + b, 0) / 5;
-            document.getElementById('overallScore').innerText = totalAvg.toFixed(1) + '%';
-        }
+            // 2. Render Cards
+            const container = document.querySelector('main');
+            container.innerHTML = ''; 
 
-        // --- MODAL LOGIC ---
-        let currentModalChart = null;
-        let currentDeptId = null;
-
-        function openModal(deptId) {
-            currentDeptId = deptId;
-            const data = deptData[deptId];
-            const overlay = document.getElementById('modalOverlay');
-            
-            // Set Text Content
-            document.getElementById('modalTitle').innerText = data.title;
-            document.getElementById('modalDesc').innerText = data.desc;
-            
-            // Populate Tasks
-            const tasksContainer = document.getElementById('modalTasks');
-            tasksContainer.innerHTML = '';
-            data.tasks.forEach(task => {
-                tasksContainer.innerHTML += `
-                    <div class="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:bg-slate-800 transition editable-text group">
-                        <span class="text-${data.color.replace('#', '')} mt-1 opacity-70 group-hover:opacity-100 transition">•</span>
-                        <p class="text-sm text-slate-300 leading-relaxed">${task}</p>
-                    </div>
-                `;
-            });
-
-            // Populate Sliders
-            const slidersContainer = document.getElementById('slidersContainer');
-            slidersContainer.innerHTML = '';
-            data.kpiLabels.forEach((label, index) => {
-                const value = data.kpiValues[index];
-                const colorClass = data.color; 
+            Object.entries(data.depts).forEach(([key, dept]) => {
+                let avg = 0;
+                // Calculate average for card display
+                if(key === 'tech' && dept.engineers && dept.engineers.length > 0) {
+                    // Tech avg based on engineers performance (mock calculation for visual)
+                    // Assuming base performance minus errors
+                    let total = 0;
+                    dept.engineers.forEach(e => total += (100 - (e.errorCount || 0) * 5));
+                    avg = Math.max(0, Math.round(total / dept.engineers.length));
+                } else if(dept.values && dept.values.length > 0) {
+                    avg = Math.round(dept.values.reduce((a, b) => a + b, 0) / dept.values.length);
+                } else {
+                    avg = 0; // Default
+                }
                 
-                slidersContainer.innerHTML += `
-                    <div>
-                        <div class="flex justify-between text-xs mb-2 font-bold font-mono">
-                            <span class="text-slate-400 editable-text">${label}</span>
-                            <span class="text-white" id="val-${index}">${value}%</span>
-                        </div>
-                        <input type="range" min="0" max="100" value="${value}" 
-                            oninput="updateChartData('${deptId}', ${index}, this.value)"
-                            style="background: linear-gradient(to right, ${colorClass} ${value}%, #334155 ${value}%);"
-                        >
+                const card = document.createElement('div');
+                card.className = 'glass-card p-6 group';
+                card.onclick = () => openModal(key);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition" 
+                             style="background: ${dept.color}20; color: ${dept.color}">${dept.icon}</div>
+                        <div class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded font-bold">${avg}%</div>
                     </div>
+                    <h3 class="text-xl font-bold text-white mb-2">${dept.title}</h3>
+                    <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-2">
+                        <div class="h-full" style="width: ${avg}%; background-color: ${dept.color}"></div>
+                    </div>
+                    <p class="text-xs text-slate-400">${key==='tech' ? (dept.engineers ? dept.engineers.length : 0) + ' مهندسين' : 'اضغط للتفاصيل'}</p>
                 `;
+                container.appendChild(card);
             });
 
-            // Render Modal Chart
-            if (currentModalChart) currentModalChart.destroy();
-            
-            const ctx = document.getElementById('modalChart').getContext('2d');
-            currentModalChart = new Chart(ctx, {
-                type: 'bar',
+            // Restore editable texts
+            document.querySelectorAll('.editable-text').forEach(el => {
+                const id = el.getAttribute('data-id');
+                if(data.texts && data.texts[id]) el.innerText = data.texts[id];
+            });
+        }
+
+        function updateMainRadarChart(data) {
+            const ctx = document.getElementById('mainRadarChart').getContext('2d');
+            const labels = [];
+            const values = [];
+            let totalSum = 0; 
+            let count = 0;
+
+            Object.values(data.depts).forEach(dept => {
+                labels.push(dept.title);
+                let avg = 0;
+                if(dept.title.includes('المكتب الفني') && dept.engineers && dept.engineers.length > 0) {
+                     let total = 0;
+                     dept.engineers.forEach(e => total += (100 - (e.errorCount || 0) * 5));
+                     avg = Math.max(0, Math.round(total / dept.engineers.length));
+                } else {
+                    avg = dept.values.reduce((a,b)=>a+b,0) / dept.values.length;
+                }
+                values.push(avg);
+                totalSum += avg;
+                count++;
+            });
+
+            document.getElementById('overallScore').innerText = Math.round(totalSum/count) + '%';
+
+            if (mainRadarChartInstance) mainRadarChartInstance.destroy();
+
+            mainRadarChartInstance = new Chart(ctx, {
+                type: 'radar',
                 data: {
-                    labels: data.kpiLabels,
+                    labels: labels,
                     datasets: [{
-                        data: data.kpiValues,
-                        backgroundColor: data.color,
-                        borderRadius: 6,
-                        barThickness: 40
+                        label: 'الأداء الحالي',
+                        data: values,
+                        backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                        borderColor: '#06b6d4',
+                        pointBackgroundColor: '#fff',
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            max: 100, 
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#64748b' }
-                        },
-                        x: { 
-                            grid: { display: false }, 
-                            ticks: { color: '#94a3b8', font: { family: 'Cairo' } } 
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { size: 11 } },
+                            suggestedMin: 0, suggestedMax: 100
                         }
                     },
                     plugins: { legend: { display: false } }
                 }
             });
-
-            overlay.classList.add('active');
         }
 
-        function updateChartData(deptId, index, newValue) {
-            newValue = Number(newValue);
-            
-            // Update Data Structure
-            deptData[deptId].kpiValues[index] = newValue;
-            
-            // Update UI Numbers
-            document.getElementById(`val-${index}`).innerText = newValue + '%';
-            
-            // Update Slider Visual
-            const sliders = document.querySelectorAll('input[type=range]');
-            sliders[index].style.background = `linear-gradient(to right, ${deptData[deptId].color} ${newValue}%, #334155 ${newValue}%)`;
+        // --- 4. MODAL LOGIC (FIXED) ---
+        let currentModalKey = null;
+        let currentTechView = 'list';
+        let currentEngIndex = null;
 
-            // Update Modal Chart
-            currentModalChart.data.datasets[0].data[index] = newValue;
-            currentModalChart.update();
-
-            // Update Radar Chart immediately
-            updateRadarChart();
+        function openModal(key) {
+            currentModalKey = key;
+            const data = getCurrentData().depts[key];
+            document.getElementById('modalTitle').innerText = data.title;
+            document.body.classList.add('modal-open');
             
-            // Save immediately
-            saveToStorage();
+            // Reset state on fresh open
+            currentTechView = 'list';
+            currentEngIndex = null;
+
+            renderModalContent(); // Render based on state
+            
+            document.getElementById('modalOverlay').classList.add('active');
         }
 
-        function closeModal(event) {
-            if (event.target.id === 'modalOverlay') {
-                document.getElementById('modalOverlay').classList.remove('active');
+        function renderModalContent() {
+            const data = getCurrentData().depts[currentModalKey];
+            const container = document.getElementById('modalBody');
+            
+            if (currentModalKey === 'tech') {
+                renderTechModal(data, container);
+            } else {
+                renderStandardModal(data, container);
             }
         }
 
-        // Edit Mode Toggle
+        // --- 5. TECH OFFICE LOGIC ---
+        function renderTechModal(data, container) {
+            // VIEW 1: LIST
+            if (currentTechView === 'list') {
+                let listHtml = '';
+                if (!data.engineers || data.engineers.length === 0) {
+                    listHtml = `<div class="text-center py-10 text-slate-500">لا يوجد مهندسين. ابدأ بالإضافة.</div>`;
+                } else {
+                    data.engineers.forEach((eng, idx) => {
+                        listHtml += `
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group mb-2">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-blue-900 text-blue-300 flex items-center justify-center font-bold">${(eng.name || '?')[0]}</div>
+                                    <div>
+                                        <h4 class="font-bold text-white">${eng.name || 'مهندس جديد'}</h4>
+                                        <p class="text-xs text-slate-400">${(eng.machines || []).length} ماكينات</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="editEngineer(${idx})" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm">تعديل</button>
+                                    <button onclick="deleteEngineer(${idx})" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                container.innerHTML = `
+                    <div class="screen-only flex justify-between mb-6">
+                        <h3 class="text-xl font-bold text-cyan-400">فريق العمل</h3>
+                        <div class="flex gap-2">
+                            <button onclick="switchTechView('summary')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold">📊 الملخص</button>
+                            <button onclick="addNewEngineer()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold">+ إضافة مهندس</button>
+                        </div>
+                    </div>
+                    <div class="space-y-4 screen-only">${listHtml}</div>
+                    
+                    <!-- Print Only -->
+                    <div class="hidden print:block">
+                        ${generateAllEngineersPrintHtml(data.engineers)}
+                        <div class="page-break"></div>
+                        ${generateTechSummaryHtml(data.engineers)}
+                    </div>
+                `;
+            } 
+            // VIEW 2: DETAIL
+            else if (currentTechView === 'detail') {
+                const eng = data.engineers[currentEngIndex];
+                
+                // Machines Rows
+                const machinesRows = (eng.machines || []).map((m, i) => `
+                    <tr>
+                        <td><input class="table-input bg-slate-900 border-slate-700" value="${m.name}" onblur="updateEngArr(${currentEngIndex}, 'machines', ${i}, 'name', this.value)" placeholder="اسم الماكينة"></td>
+                        <td><input class="table-input bg-slate-900 border-slate-700" value="${m.notes}" onblur="updateEngArr(${currentEngIndex}, 'machines', ${i}, 'notes', this.value)" placeholder="تفاصيل العمل"></td>
+                        <td class="no-print"><button onclick="removeEngArr(${currentEngIndex}, 'machines', ${i})" class="text-red-400">×</button></td>
+                    </tr>
+                `).join('');
+
+                // Lateness Rows
+                const latenessRows = (eng.latenessLog || []).map((l, i) => `
+                    <tr>
+                        <td><input class="table-input bg-slate-900 border-slate-700" type="date" value="${l.day}" onblur="updateEngArr(${currentEngIndex}, 'latenessLog', ${i}, 'day', this.value)"></td>
+                        <td><input class="table-input bg-slate-900 border-slate-700" type="number" value="${l.hours}" onblur="updateEngArr(${currentEngIndex}, 'latenessLog', ${i}, 'hours', this.value)"></td>
+                        <td class="no-print"><button onclick="removeEngArr(${currentEngIndex}, 'latenessLog', ${i})" class="text-red-400">×</button></td>
+                    </tr>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="flex items-center gap-4 mb-6 no-print">
+                        <button onclick="switchTechView('list')" class="bg-slate-700 text-white px-3 py-1 rounded">⬅ رجوع</button>
+                        <h3 class="text-xl font-bold text-white">تعديل: <span class="text-cyan-400">${eng.name}</span></h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-800 p-6 rounded-xl border border-slate-700 mb-6">
+                        <div>
+                            <label class="text-slate-400 text-xs">اسم المهندس</label>
+                            <input class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white mt-1" 
+                                   value="${eng.name}" onblur="updateEngField(${currentEngIndex}, 'name', this.value)">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-slate-400 text-xs text-red-400">عدد الأخطاء</label>
+                                <input type="number" class="w-full bg-slate-900 border border-red-900/50 rounded p-2 text-white mt-1 text-center" 
+                                       value="${eng.errorCount || 0}" onblur="updateEngField(${currentEngIndex}, 'errorCount', this.value)">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 text-xs text-green-400">حالة التسليم</label>
+                                <input class="w-full bg-slate-900 border border-green-900/50 rounded p-2 text-white mt-1 text-center" 
+                                       value="${eng.handoverStatus || 'تمام'}" onblur="updateEngField(${currentEngIndex}, 'handoverStatus', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                            <div class="flex justify-between mb-2">
+                                <h4 class="text-blue-400 font-bold">🛠️ سجل الماكينات</h4>
+                                <button onclick="addEngArr(${currentEngIndex}, 'machines')" class="text-xs bg-blue-600 px-2 py-1 rounded text-white no-print">+ إضافة</button>
+                            </div>
+                            <table class="w-full text-sm text-slate-300">
+                                <thead><tr class="text-slate-500 border-b border-slate-700"><th>الماكينة</th><th>ملاحظات</th><th></th></tr></thead>
+                                <tbody>${machinesRows}</tbody>
+                            </table>
+                        </div>
+
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                            <div class="flex justify-between mb-2">
+                                <h4 class="text-red-400 font-bold">⏰ سجل التأخيرات</h4>
+                                <button onclick="addEngArr(${currentEngIndex}, 'latenessLog')" class="text-xs bg-red-600 px-2 py-1 rounded text-white no-print">+ إضافة</button>
+                            </div>
+                            <table class="w-full text-sm text-slate-300">
+                                <thead><tr class="text-slate-500 border-b border-slate-700"><th>التاريخ</th><th>الساعات</th><th></th></tr></thead>
+                                <tbody>${latenessRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            // VIEW 3: SUMMARY
+            else if (currentTechView === 'summary') {
+                container.innerHTML = `
+                    <div class="flex items-center gap-4 mb-6 no-print">
+                        <button onclick="switchTechView('list')" class="bg-slate-700 text-white px-3 py-1 rounded">⬅ رجوع</button>
+                        <h3 class="text-xl font-bold text-white">📊 تحليل الأداء</h3>
+                    </div>
+                    ${generateTechSummaryHtml(data.engineers)}
+                `;
+                setTimeout(() => renderSummaryChart(data.engineers), 100);
+            }
+        }
+
+        // --- Tech Office Actions ---
+        function switchTechView(view) {
+            currentTechView = view;
+            renderModalContent(); // Re-render without closing/opening
+        }
+
+        function addNewEngineer() {
+            const data = getCurrentData().depts['tech'];
+            if(!data.engineers) data.engineers = [];
+            data.engineers.push({
+                name: 'مهندس جديد', machines: [], latenessLog: [], errorCount: 0, handoverStatus: 'جاري'
+            });
+            saveDB();
+            currentEngIndex = data.engineers.length - 1;
+            switchTechView('detail');
+        }
+
+        function editEngineer(index) {
+            currentEngIndex = index;
+            switchTechView('detail');
+        }
+
+        function deleteEngineer(index) {
+            if(confirm('حذف؟')) {
+                getCurrentData().depts['tech'].engineers.splice(index, 1);
+                saveDB();
+                renderModalContent();
+            }
+        }
+
+        function updateEngField(idx, f, v) {
+            getCurrentData().depts['tech'].engineers[idx][f] = v;
+            saveDB();
+        }
+        function updateEngArr(eIdx, arr, iIdx, key, val) {
+            getCurrentData().depts['tech'].engineers[eIdx][arr][iIdx][key] = val;
+            saveDB();
+        }
+        function addEngArr(eIdx, arr) {
+            const e = getCurrentData().depts['tech'].engineers[eIdx];
+            if(arr === 'machines') e.machines.push({name:'', notes:''});
+            if(arr === 'latenessLog') e.latenessLog.push({day:'', hours:0});
+            saveDB();
+            renderModalContent();
+        }
+        function removeEngArr(eIdx, arr, iIdx) {
+            getCurrentData().depts['tech'].engineers[eIdx][arr].splice(iIdx, 1);
+            saveDB();
+            renderModalContent();
+        }
+
+        // --- 6. PRINT GENERATORS ---
+        function generateAllEngineersPrintHtml(engineers) {
+            if(!engineers || engineers.length === 0) return '';
+            return engineers.map(eng => `
+                <div class="engineer-report-page">
+                    <h3 class="text-xl font-bold bg-gray-200 p-2 border border-black mb-4">تقرير: ${eng.name}</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4 border border-black p-2">
+                        <div><strong>عدد الأخطاء:</strong> ${eng.errorCount || 0}</div>
+                        <div><strong>حالة التسليم:</strong> ${eng.handoverStatus || '-'}</div>
+                    </div>
+                    <h4 class="font-bold border-b border-black mb-2 mt-4">1. سجل الماكينات</h4>
+                    <table class="w-full mb-4">
+                        <thead><tr><th>م</th><th>اسم الماكينة</th><th>ملاحظات العمل</th></tr></thead>
+                        <tbody>${(eng.machines||[]).map((m,i)=>`<tr><td>${i+1}</td><td>${m.name}</td><td>${m.notes}</td></tr>`).join('') || '<tr><td colspan="3">لا يوجد</td></tr>'}</tbody>
+                    </table>
+                    <h4 class="font-bold border-b border-black mb-2 mt-4">2. سجل الحضور</h4>
+                    <table class="w-full">
+                        <thead><tr><th>التاريخ</th><th>ساعات التأخير</th></tr></thead>
+                        <tbody>${(eng.latenessLog||[]).map(l=>`<tr><td>${l.day}</td><td>${l.hours}</td></tr>`).join('') || '<tr><td colspan="2">منتظم</td></tr>'}</tbody>
+                    </table>
+                    <div class="mt-8 flex justify-between"><div class="text-center">توقيع المهندس<br>...</div><div class="text-center">مدير المكتب الفني<br>...</div></div>
+                </div>
+            `).join('');
+        }
+
+        function generateTechSummaryHtml(engineers) {
+            if(!engineers || engineers.length === 0) return '';
+            const totalErr = engineers.reduce((s,e)=>s+Number(e.errorCount||0),0);
+            const totalMac = engineers.reduce((s,e)=>s+(e.machines?.length||0),0);
+            const topEng = engineers.reduce((p,c)=>((p.machines?.length||0) > (c.machines?.length||0)) ? p : c, engineers[0]);
+            
+            return `
+                <div class="bg-white text-black p-6 rounded-xl border border-gray-300">
+                    <div class="grid grid-cols-3 gap-6 mb-8 text-center">
+                        <div class="p-4 border border-blue-500 rounded-lg">
+                            <div class="text-sm text-gray-600">إجمالي الماكينات</div><div class="text-3xl font-bold text-blue-600">${totalMac}</div>
+                        </div>
+                        <div class="p-4 border border-red-500 rounded-lg">
+                            <div class="text-sm text-gray-600">إجمالي الأخطاء</div><div class="text-3xl font-bold text-red-600">${totalErr}</div>
+                        </div>
+                        <div class="p-4 border border-green-500 rounded-lg">
+                            <div class="text-sm text-gray-600">الأكثر إنتاجاً</div><div class="text-xl font-bold text-green-600">${topEng.name}</div>
+                        </div>
+                    </div>
+                    <div class="h-64 w-full border border-gray-200 p-4 rounded bg-gray-50"><canvas id="techSummaryChart"></canvas></div>
+                </div>
+            `;
+        }
+
+        function renderSummaryChart(engineers) {
+            const ctx = document.getElementById('techSummaryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: engineers.map(e => e.name),
+                    datasets: [
+                        { label: 'ماكينات', data: engineers.map(e=>e.machines?.length||0), backgroundColor: '#3b82f6' },
+                        { label: 'أخطاء', data: engineers.map(e=>e.errorCount||0), backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // --- 7. STANDARD MODAL ---
+        function renderStandardModal(data, container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
+                        <h4 class="font-bold text-cyan-400 mb-6">⚙️ ضبط المؤشرات</h4>
+                        ${data.kpiLabels.map((l, i) => `
+                            <div class="mb-4">
+                                <div class="flex justify-between text-xs mb-1 text-slate-300"><span>${l}</span><span>${data.values[i]}%</span></div>
+                                <input type="range" min="0" max="100" value="${data.values[i]}" oninput="updateVal(${i}, this.value)" style="width:100%; accent-color:${data.color}">
+                            </div>`).join('')}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white mb-2">📝 ملاحظات</h4>
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                            <p class="text-sm text-slate-300 outline-none" contenteditable="true" onblur="saveDeptNotes(this.innerText)">${data.notes}</p>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // --- Shared Helpers ---
+        function updateVal(idx, val) {
+            getCurrentData().depts[currentModalKey].values[idx] = Number(val);
+            saveDB(); renderDashboard();
+        }
+        function saveDeptNotes(text) { getCurrentData().depts[currentModalKey].notes = text; saveDB(); }
+        function closeModalBtn() { 
+            document.getElementById('modalOverlay').classList.remove('active'); 
+            document.body.classList.remove('modal-open');
+            renderDashboard(); // Update main chart when closing
+        }
+        function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalBtn(); }
+
+        // --- Init Helpers ---
+        function renderMonthSelector() {
+            const sel = document.getElementById('monthSelector'); sel.innerHTML = '';
+            Object.keys(db).sort().reverse().forEach(k => {
+                const opt = document.createElement('option'); opt.value = k; opt.text = k;
+                if(k === currentMonthKey) opt.selected = true; sel.appendChild(opt);
+            });
+        }
+        function changeMonth() { currentMonthKey = document.getElementById('monthSelector').value; renderDashboard(); saveDB(); }
+        function createNewMonth() {
+            const k = prompt("الشهر الجديد (YYYY-MM):", new Date().toISOString().slice(0,7));
+            if(k && !db[k]) { db[k] = { depts: JSON.parse(JSON.stringify(defaultDeptStructure)), texts: {} }; currentMonthKey = k; saveDB(); init(); }
+        }
+        function resetCurrentMonth() { if(confirm("حذف؟")) { delete db[currentMonthKey]; localStorage.removeItem('IMSY_DB_V6'); location.reload(); } }
         let isEditMode = false;
         function toggleEditMode() {
             isEditMode = !isEditMode;
+            const els = document.querySelectorAll('.editable-text');
             const btn = document.getElementById('editBtn');
-            const elements = document.querySelectorAll('.editable-text');
-
             if (isEditMode) {
-                btn.classList.add('border-cyan-500', 'text-cyan-400', 'bg-slate-900');
-                btn.innerHTML = '<span>💾</span> حفظ التعديلات';
-                elements.forEach(el => {
-                    el.contentEditable = "true";
-                    el.classList.add('editable-active');
-                });
+                btn.classList.add('bg-cyan-600');
+                els.forEach(el => { el.contentEditable = true; el.classList.add('editable-active'); el.onblur = function() { const id = this.getAttribute('data-id'); if(!getCurrentData().texts) getCurrentData().texts = {}; getCurrentData().texts[id] = this.innerText; saveDB(); }});
             } else {
-                // SAVE DATA WHEN EXITING EDIT MODE
-                saveToStorage();
-
-                btn.classList.remove('border-cyan-500', 'text-cyan-400', 'bg-slate-900');
-                btn.innerHTML = '<span class="text-lg">⚙️</span> <span>تعديل البيانات</span>';
-                elements.forEach(el => {
-                    el.contentEditable = "false";
-                    el.classList.remove('editable-active');
-                });
+                btn.classList.remove('bg-cyan-600'); els.forEach(el => { el.contentEditable = false; el.classList.remove('editable-active'); });
             }
         }
+
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>
