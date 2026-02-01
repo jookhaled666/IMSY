@@ -16,7 +16,7 @@
                     fontFamily: { sans: ['Cairo', 'sans-serif'] },
                     colors: {
                         dark: { 900: '#0b1121', 800: '#151e32', 700: '#2a3b55' },
-                        brand: { cyan: '#06b6d4', blue: '#3b82f6', orange: '#f97316', green: '#10b981', red: '#ef4444', yellow: '#eab308' }
+                        brand: { cyan: '#06b6d4', blue: '#3b82f6', orange: '#f97316', green: '#10b981', red: '#ef4444', yellow: '#eab308', purple: '#8b5cf6', slate: '#64748b' }
                     }
                 }
             }
@@ -137,12 +137,12 @@
             </div>
             <div class="text-left">
                 <div class="text-sm text-slate-500">الفترة</div>
-                <div class="text-2xl font-bold text-white print:text-black" id="displayPeriod">يناير 2026</div>
+                <div class="text-2xl font-bold text-white print:text-black" id="displayPeriod">...</div>
             </div>
         </div>
     </header>
 
-    <!-- Overview Section (REINSTATED) -->
+    <!-- Overview Section -->
     <section class="max-w-7xl mx-auto mb-8">
         <div class="glass-card p-6 md:p-8">
             <div class="flex flex-col md:flex-row items-center gap-8">
@@ -201,6 +201,11 @@
     <script>
         // --- 1. CONFIGURATION ---
         const defaultDeptStructure = {
+            'managers': {
+                title: 'إدارة المصنع والمسؤولين', icon: '👔', color: '#64748b',
+                isSummary: true,
+                kpiLabels: [], values: []
+            },
             'tech': { 
                 title: 'المكتب الفني', icon: '📐', color: '#3b82f6', 
                 engineers: [], // Array of objects
@@ -221,6 +226,13 @@
                 kpiLabels: ['الاستجابة', 'الوقائية'], values: [88, 90],
                 tasks: ['Preventive', 'Corrective'], notes: '...'
             },
+            'store': { 
+                title: 'التخطيط والمخازن', icon: '📦', color: '#8b5cf6', 
+                kpiLabels: ['توفير الخامات', 'دقة الجرد', 'تنظيم الأوردرات'], values: [92, 96, 90],
+                managerName: '',
+                inventoryLog: [], 
+                shortageLog: []
+            },
             'safety': { 
                 title: 'السلامة', icon: '🦺', color: '#eab308', 
                 kpiLabels: ['PPE', 'الحوادث'], values: [98, 100],
@@ -228,9 +240,9 @@
             }
         };
 
-        // --- 2. DB MANAGEMENT (V6) ---
-        let db = JSON.parse(localStorage.getItem('IMSY_DB_V6')) || {};
-        let currentMonthKey = localStorage.getItem('IMSY_CURRENT_MONTH_V6');
+        // --- 2. DB MANAGEMENT (V9.2 Fixed) ---
+        let db = JSON.parse(localStorage.getItem('IMSY_DB_V9_2')) || {};
+        let currentMonthKey = localStorage.getItem('IMSY_CURRENT_MONTH_V9_2');
 
         if (Object.keys(db).length === 0) {
             const now = new Date();
@@ -242,8 +254,8 @@
         if (!currentMonthKey || !db[currentMonthKey]) currentMonthKey = Object.keys(db).sort().pop();
 
         function saveDB() {
-            localStorage.setItem('IMSY_DB_V6', JSON.stringify(db));
-            localStorage.setItem('IMSY_CURRENT_MONTH_V6', currentMonthKey);
+            localStorage.setItem('IMSY_DB_V9_2', JSON.stringify(db));
+            localStorage.setItem('IMSY_CURRENT_MONTH_V9_2', currentMonthKey);
             showToast();
         }
         function getCurrentData() { return db[currentMonthKey]; }
@@ -266,17 +278,25 @@
 
             Object.entries(data.depts).forEach(([key, dept]) => {
                 let avg = 0;
-                // Calculate average for card display
-                if(key === 'tech' && dept.engineers && dept.engineers.length > 0) {
-                    // Tech avg based on engineers performance (mock calculation for visual)
-                    // Assuming base performance minus errors
+                if (key === 'managers') {
+                    let total = 0, count = 0;
+                    Object.entries(data.depts).forEach(([k, d]) => {
+                        if (k !== 'managers') {
+                            if(d.values && d.values.length > 0) {
+                                total += d.values.reduce((a,b)=>a+b,0)/d.values.length;
+                                count++;
+                            }
+                        }
+                    });
+                    avg = count ? Math.round(total/count) : 0;
+                } else if(key === 'tech' && dept.engineers && dept.engineers.length > 0) {
                     let total = 0;
                     dept.engineers.forEach(e => total += (100 - (e.errorCount || 0) * 5));
                     avg = Math.max(0, Math.round(total / dept.engineers.length));
                 } else if(dept.values && dept.values.length > 0) {
                     avg = Math.round(dept.values.reduce((a, b) => a + b, 0) / dept.values.length);
                 } else {
-                    avg = 0; // Default
+                    avg = 0;
                 }
                 
                 const card = document.createElement('div');
@@ -292,12 +312,11 @@
                     <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-2">
                         <div class="h-full" style="width: ${avg}%; background-color: ${dept.color}"></div>
                     </div>
-                    <p class="text-xs text-slate-400">${key==='tech' ? (dept.engineers ? dept.engineers.length : 0) + ' مهندسين' : 'اضغط للتفاصيل'}</p>
+                    <p class="text-xs text-slate-400">${key==='tech' ? (dept.engineers ? dept.engineers.length : 0) + ' مهندسين' : (key==='managers' ? 'قائمة المسؤولين' : 'اضغط للتفاصيل')}</p>
                 `;
                 container.appendChild(card);
             });
 
-            // Restore editable texts
             document.querySelectorAll('.editable-text').forEach(el => {
                 const id = el.getAttribute('data-id');
                 if(data.texts && data.texts[id]) el.innerText = data.texts[id];
@@ -311,7 +330,9 @@
             let totalSum = 0; 
             let count = 0;
 
-            Object.values(data.depts).forEach(dept => {
+            Object.entries(data.depts).forEach(([key, dept]) => {
+                if (key === 'managers') return; 
+                
                 labels.push(dept.title);
                 let avg = 0;
                 if(dept.title.includes('المكتب الفني') && dept.engineers && dept.engineers.length > 0) {
@@ -319,14 +340,14 @@
                      dept.engineers.forEach(e => total += (100 - (e.errorCount || 0) * 5));
                      avg = Math.max(0, Math.round(total / dept.engineers.length));
                 } else {
-                    avg = dept.values.reduce((a,b)=>a+b,0) / dept.values.length;
+                    avg = dept.values.length ? dept.values.reduce((a,b)=>a+b,0) / dept.values.length : 0;
                 }
                 values.push(avg);
                 totalSum += avg;
                 count++;
             });
 
-            document.getElementById('overallScore').innerText = Math.round(totalSum/count) + '%';
+            document.getElementById('overallScore').innerText = (count ? Math.round(totalSum/count) : 0) + '%';
 
             if (mainRadarChartInstance) mainRadarChartInstance.destroy();
 
@@ -360,7 +381,7 @@
 
         // --- 4. MODAL LOGIC (FIXED) ---
         let currentModalKey = null;
-        let currentTechView = 'list';
+        let currentView = 'list'; // UNIFIED Variable Name
         let currentEngIndex = null;
 
         function openModal(key) {
@@ -370,331 +391,212 @@
             document.body.classList.add('modal-open');
             
             // Reset state on fresh open
-            currentTechView = 'list';
+            currentView = 'list';
             currentEngIndex = null;
 
-            renderModalContent(); // Render based on state
+            renderModalContent();
             
             document.getElementById('modalOverlay').classList.add('active');
         }
+
+        function closeModalBtn() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.classList.remove('modal-open');
+            renderDashboard(); 
+        }
+        function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalBtn(); }
 
         function renderModalContent() {
             const data = getCurrentData().depts[currentModalKey];
             const container = document.getElementById('modalBody');
             
-            if (currentModalKey === 'tech') {
-                renderTechModal(data, container);
-            } else {
-                renderStandardModal(data, container);
-            }
+            const managerHtml = currentModalKey === 'managers' ? '' : `
+                <div class="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center gap-4">
+                    <span class="text-slate-400">👤 المسؤول عن القسم:</span>
+                    <input class="bg-transparent border-b border-slate-600 text-white outline-none focus:border-cyan-500" 
+                           value="${data.managerName || ''}" placeholder="اكتب الاسم هنا" onblur="updateManager(this.value)">
+                </div>`;
+
+            if (currentModalKey === 'managers') renderManagers(container);
+            else if (currentModalKey === 'tech') renderTech(data, container, managerHtml);
+            else if (currentModalKey === 'prod') renderProd(data, container, managerHtml);
+            else if (currentModalKey === 'store') renderStore(data, container, managerHtml);
+            else renderGeneric(data, container, managerHtml); 
         }
 
-        // --- 5. TECH OFFICE LOGIC ---
-        function renderTechModal(data, container) {
-            // VIEW 1: LIST
-            if (currentTechView === 'list') {
-                let listHtml = '';
-                if (!data.engineers || data.engineers.length === 0) {
-                    listHtml = `<div class="text-center py-10 text-slate-500">لا يوجد مهندسين. ابدأ بالإضافة.</div>`;
-                } else {
-                    data.engineers.forEach((eng, idx) => {
-                        listHtml += `
-                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group mb-2">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-blue-900 text-blue-300 flex items-center justify-center font-bold">${(eng.name || '?')[0]}</div>
-                                    <div>
-                                        <h4 class="font-bold text-white">${eng.name || 'مهندس جديد'}</h4>
-                                        <p class="text-xs text-slate-400">${(eng.machines || []).length} ماكينات</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button onclick="editEngineer(${idx})" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm">تعديل</button>
-                                    <button onclick="deleteEngineer(${idx})" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
-                                </div>
-                            </div>
-                        `;
-                    });
+        function updateManager(val) {
+            getCurrentData().depts[currentModalKey].managerName = val;
+            saveDB();
+        }
+
+        // --- 5. MANAGERS VIEW ---
+        function renderManagers(container) {
+            const data = getCurrentData();
+            let rows = '';
+            
+            Object.entries(data.depts).forEach(([key, dept]) => {
+                if (key === 'managers') return; 
+                
+                let avg = 0;
+                if(key === 'tech' && dept.engineers) {
+                    let total = 0;
+                    (dept.engineers||[]).forEach(e => total += (100 - (e.errorCount || 0) * 5));
+                    avg = (dept.engineers||[]).length ? Math.max(0, Math.round(total / dept.engineers.length)) : 0;
+                } else if(dept.values) {
+                    avg = dept.values.length ? Math.round(dept.values.reduce((a,b)=>a+b,0)/dept.values.length) : 0;
                 }
 
-                container.innerHTML = `
-                    <div class="screen-only flex justify-between mb-6">
-                        <h3 class="text-xl font-bold text-cyan-400">فريق العمل</h3>
-                        <div class="flex gap-2">
-                            <button onclick="switchTechView('summary')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold">📊 الملخص</button>
-                            <button onclick="addNewEngineer()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold">+ إضافة مهندس</button>
-                        </div>
-                    </div>
-                    <div class="space-y-4 screen-only">${listHtml}</div>
-                    
-                    <!-- Print Only -->
-                    <div class="hidden print:block">
-                        ${generateAllEngineersPrintHtml(data.engineers)}
-                        <div class="page-break"></div>
-                        ${generateTechSummaryHtml(data.engineers)}
-                    </div>
-                `;
-            } 
-            // VIEW 2: DETAIL
-            else if (currentTechView === 'detail') {
-                const eng = data.engineers[currentEngIndex];
-                
-                // Machines Rows
-                const machinesRows = (eng.machines || []).map((m, i) => `
-                    <tr>
-                        <td><input class="table-input bg-slate-900 border-slate-700" value="${m.name}" onblur="updateEngArr(${currentEngIndex}, 'machines', ${i}, 'name', this.value)" placeholder="اسم الماكينة"></td>
-                        <td><input class="table-input bg-slate-900 border-slate-700" value="${m.notes}" onblur="updateEngArr(${currentEngIndex}, 'machines', ${i}, 'notes', this.value)" placeholder="تفاصيل العمل"></td>
-                        <td class="no-print"><button onclick="removeEngArr(${currentEngIndex}, 'machines', ${i})" class="text-red-400">×</button></td>
+                let statusColor = 'text-red-400';
+                let statusText = 'يحتاج تحسين';
+                if (avg >= 90) { statusColor = 'text-green-400'; statusText = 'ممتاز'; }
+                else if (avg >= 80) { statusColor = 'text-blue-400'; statusText = 'جيد جداً'; }
+                else if (avg >= 70) { statusColor = 'text-yellow-400'; statusText = 'جيد'; }
+
+                rows += `
+                    <tr class="border-b border-slate-700 hover:bg-slate-800/50 transition">
+                        <td class="py-4 flex items-center gap-3">
+                            <span class="text-xl" style="color: ${dept.color}">${dept.icon}</span>
+                            <span class="text-white font-bold">${dept.title}</span>
+                        </td>
+                        <td>
+                            <input class="bg-transparent border-b border-slate-600 text-center text-white focus:border-cyan-500 w-full"
+                                   value="${dept.managerName || ''}" placeholder="غير محدد"
+                                   onblur="updateSpecificManager('${key}', this.value)">
+                        </td>
+                        <td>
+                            <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                                <div class="h-full" style="width: ${avg}%; background-color: ${dept.color}"></div>
+                            </div>
+                            <div class="text-xs text-center mt-1 text-slate-400">${avg}%</div>
+                        </td>
+                        <td class="font-bold ${statusColor}">${statusText}</td>
                     </tr>
-                `).join('');
-
-                // Lateness Rows
-                const latenessRows = (eng.latenessLog || []).map((l, i) => `
-                    <tr>
-                        <td><input class="table-input bg-slate-900 border-slate-700" type="date" value="${l.day}" onblur="updateEngArr(${currentEngIndex}, 'latenessLog', ${i}, 'day', this.value)"></td>
-                        <td><input class="table-input bg-slate-900 border-slate-700" type="number" value="${l.hours}" onblur="updateEngArr(${currentEngIndex}, 'latenessLog', ${i}, 'hours', this.value)"></td>
-                        <td class="no-print"><button onclick="removeEngArr(${currentEngIndex}, 'latenessLog', ${i})" class="text-red-400">×</button></td>
-                    </tr>
-                `).join('');
-
-                container.innerHTML = `
-                    <div class="flex items-center gap-4 mb-6 no-print">
-                        <button onclick="switchTechView('list')" class="bg-slate-700 text-white px-3 py-1 rounded">⬅ رجوع</button>
-                        <h3 class="text-xl font-bold text-white">تعديل: <span class="text-cyan-400">${eng.name}</span></h3>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-800 p-6 rounded-xl border border-slate-700 mb-6">
-                        <div>
-                            <label class="text-slate-400 text-xs">اسم المهندس</label>
-                            <input class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white mt-1" 
-                                   value="${eng.name}" onblur="updateEngField(${currentEngIndex}, 'name', this.value)">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-slate-400 text-xs text-red-400">عدد الأخطاء</label>
-                                <input type="number" class="w-full bg-slate-900 border border-red-900/50 rounded p-2 text-white mt-1 text-center" 
-                                       value="${eng.errorCount || 0}" onblur="updateEngField(${currentEngIndex}, 'errorCount', this.value)">
-                            </div>
-                            <div>
-                                <label class="text-slate-400 text-xs text-green-400">حالة التسليم</label>
-                                <input class="w-full bg-slate-900 border border-green-900/50 rounded p-2 text-white mt-1 text-center" 
-                                       value="${eng.handoverStatus || 'تمام'}" onblur="updateEngField(${currentEngIndex}, 'handoverStatus', this.value)">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
-                            <div class="flex justify-between mb-2">
-                                <h4 class="text-blue-400 font-bold">🛠️ سجل الماكينات</h4>
-                                <button onclick="addEngArr(${currentEngIndex}, 'machines')" class="text-xs bg-blue-600 px-2 py-1 rounded text-white no-print">+ إضافة</button>
-                            </div>
-                            <table class="w-full text-sm text-slate-300">
-                                <thead><tr class="text-slate-500 border-b border-slate-700"><th>الماكينة</th><th>ملاحظات</th><th></th></tr></thead>
-                                <tbody>${machinesRows}</tbody>
-                            </table>
-                        </div>
-
-                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
-                            <div class="flex justify-between mb-2">
-                                <h4 class="text-red-400 font-bold">⏰ سجل التأخيرات</h4>
-                                <button onclick="addEngArr(${currentEngIndex}, 'latenessLog')" class="text-xs bg-red-600 px-2 py-1 rounded text-white no-print">+ إضافة</button>
-                            </div>
-                            <table class="w-full text-sm text-slate-300">
-                                <thead><tr class="text-slate-500 border-b border-slate-700"><th>التاريخ</th><th>الساعات</th><th></th></tr></thead>
-                                <tbody>${latenessRows}</tbody>
-                            </table>
-                        </div>
-                    </div>
                 `;
-            }
-            // VIEW 3: SUMMARY
-            else if (currentTechView === 'summary') {
-                container.innerHTML = `
-                    <div class="flex items-center gap-4 mb-6 no-print">
-                        <button onclick="switchTechView('list')" class="bg-slate-700 text-white px-3 py-1 rounded">⬅ رجوع</button>
-                        <h3 class="text-xl font-bold text-white">📊 تحليل الأداء</h3>
-                    </div>
-                    ${generateTechSummaryHtml(data.engineers)}
-                `;
-                setTimeout(() => renderSummaryChart(data.engineers), 100);
-            }
-        }
-
-        // --- Tech Office Actions ---
-        function switchTechView(view) {
-            currentTechView = view;
-            renderModalContent(); // Re-render without closing/opening
-        }
-
-        function addNewEngineer() {
-            const data = getCurrentData().depts['tech'];
-            if(!data.engineers) data.engineers = [];
-            data.engineers.push({
-                name: 'مهندس جديد', machines: [], latenessLog: [], errorCount: 0, handoverStatus: 'جاري'
             });
-            saveDB();
-            currentEngIndex = data.engineers.length - 1;
-            switchTechView('detail');
-        }
 
-        function editEngineer(index) {
-            currentEngIndex = index;
-            switchTechView('detail');
-        }
-
-        function deleteEngineer(index) {
-            if(confirm('حذف؟')) {
-                getCurrentData().depts['tech'].engineers.splice(index, 1);
-                saveDB();
-                renderModalContent();
-            }
-        }
-
-        function updateEngField(idx, f, v) {
-            getCurrentData().depts['tech'].engineers[idx][f] = v;
-            saveDB();
-        }
-        function updateEngArr(eIdx, arr, iIdx, key, val) {
-            getCurrentData().depts['tech'].engineers[eIdx][arr][iIdx][key] = val;
-            saveDB();
-        }
-        function addEngArr(eIdx, arr) {
-            const e = getCurrentData().depts['tech'].engineers[eIdx];
-            if(arr === 'machines') e.machines.push({name:'', notes:''});
-            if(arr === 'latenessLog') e.latenessLog.push({day:'', hours:0});
-            saveDB();
-            renderModalContent();
-        }
-        function removeEngArr(eIdx, arr, iIdx) {
-            getCurrentData().depts['tech'].engineers[eIdx][arr].splice(iIdx, 1);
-            saveDB();
-            renderModalContent();
-        }
-
-        // --- 6. PRINT GENERATORS ---
-        function generateAllEngineersPrintHtml(engineers) {
-            if(!engineers || engineers.length === 0) return '';
-            return engineers.map(eng => `
-                <div class="engineer-report-page">
-                    <h3 class="text-xl font-bold bg-gray-200 p-2 border border-black mb-4">تقرير: ${eng.name}</h3>
-                    <div class="grid grid-cols-2 gap-4 mb-4 border border-black p-2">
-                        <div><strong>عدد الأخطاء:</strong> ${eng.errorCount || 0}</div>
-                        <div><strong>حالة التسليم:</strong> ${eng.handoverStatus || '-'}</div>
+            container.innerHTML = `
+                <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="text-xl font-bold text-white mb-6 border-b border-slate-600 pb-2">قائمة المسؤولين وتقييم الأداء</h3>
+                    <table class="w-full text-sm text-center">
+                        <thead>
+                            <tr class="text-slate-500 border-b border-slate-600">
+                                <th class="pb-3 text-right">القسم</th>
+                                <th class="pb-3">المسؤول</th>
+                                <th class="pb-3 w-1/4">مؤشر الأداء</th>
+                                <th class="pb-3">الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    
+                    <div class="mt-8 pt-4 border-t border-slate-700 flex justify-end no-print">
+                        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2">
+                            <span>🖨️</span> طباعة تقرير الإدارة
+                        </button>
                     </div>
-                    <h4 class="font-bold border-b border-black mb-2 mt-4">1. سجل الماكينات</h4>
-                    <table class="w-full mb-4">
-                        <thead><tr><th>م</th><th>اسم الماكينة</th><th>ملاحظات العمل</th></tr></thead>
-                        <tbody>${(eng.machines||[]).map((m,i)=>`<tr><td>${i+1}</td><td>${m.name}</td><td>${m.notes}</td></tr>`).join('') || '<tr><td colspan="3">لا يوجد</td></tr>'}</tbody>
-                    </table>
-                    <h4 class="font-bold border-b border-black mb-2 mt-4">2. سجل الحضور</h4>
-                    <table class="w-full">
-                        <thead><tr><th>التاريخ</th><th>ساعات التأخير</th></tr></thead>
-                        <tbody>${(eng.latenessLog||[]).map(l=>`<tr><td>${l.day}</td><td>${l.hours}</td></tr>`).join('') || '<tr><td colspan="2">منتظم</td></tr>'}</tbody>
-                    </table>
-                    <div class="mt-8 flex justify-between"><div class="text-center">توقيع المهندس<br>...</div><div class="text-center">مدير المكتب الفني<br>...</div></div>
-                </div>
-            `).join('');
-        }
 
-        function generateTechSummaryHtml(engineers) {
-            if(!engineers || engineers.length === 0) return '';
-            const totalErr = engineers.reduce((s,e)=>s+Number(e.errorCount||0),0);
-            const totalMac = engineers.reduce((s,e)=>s+(e.machines?.length||0),0);
-            const topEng = engineers.reduce((p,c)=>((p.machines?.length||0) > (c.machines?.length||0)) ? p : c, engineers[0]);
-            
-            return `
-                <div class="bg-white text-black p-6 rounded-xl border border-gray-300">
-                    <div class="grid grid-cols-3 gap-6 mb-8 text-center">
-                        <div class="p-4 border border-blue-500 rounded-lg">
-                            <div class="text-sm text-gray-600">إجمالي الماكينات</div><div class="text-3xl font-bold text-blue-600">${totalMac}</div>
-                        </div>
-                        <div class="p-4 border border-red-500 rounded-lg">
-                            <div class="text-sm text-gray-600">إجمالي الأخطاء</div><div class="text-3xl font-bold text-red-600">${totalErr}</div>
-                        </div>
-                        <div class="p-4 border border-green-500 rounded-lg">
-                            <div class="text-sm text-gray-600">الأكثر إنتاجاً</div><div class="text-xl font-bold text-green-600">${topEng.name}</div>
+                    <div class="hidden print:block mt-12 pt-8 border-t border-black">
+                        <div class="flex justify-between text-center">
+                            <div>يعتمد،<br><br><strong>المدير العام</strong></div>
+                            <div>التاريخ:<br><br>____ / ____ / 2026</div>
                         </div>
                     </div>
-                    <div class="h-64 w-full border border-gray-200 p-4 rounded bg-gray-50"><canvas id="techSummaryChart"></canvas></div>
                 </div>
             `;
         }
 
-        function renderSummaryChart(engineers) {
-            const ctx = document.getElementById('techSummaryChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: engineers.map(e => e.name),
-                    datasets: [
-                        { label: 'ماكينات', data: engineers.map(e=>e.machines?.length||0), backgroundColor: '#3b82f6' },
-                        { label: 'أخطاء', data: engineers.map(e=>e.errorCount||0), backgroundColor: '#ef4444' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
+        function updateSpecificManager(key, val) {
+            getCurrentData().depts[key].managerName = val;
+            saveDB();
         }
 
-        // --- 7. STANDARD MODAL ---
-        function renderStandardModal(data, container) {
-            container.innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                        <h4 class="font-bold text-cyan-400 mb-6">⚙️ ضبط المؤشرات</h4>
-                        ${data.kpiLabels.map((l, i) => `
-                            <div class="mb-4">
-                                <div class="flex justify-between text-xs mb-1 text-slate-300"><span>${l}</span><span>${data.values[i]}%</span></div>
-                                <input type="range" min="0" max="100" value="${data.values[i]}" oninput="updateVal(${i}, this.value)" style="width:100%; accent-color:${data.color}">
-                            </div>`).join('')}
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-white mb-2">📝 ملاحظات</h4>
-                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                            <p class="text-sm text-slate-300 outline-none" contenteditable="true" onblur="saveDeptNotes(this.innerText)">${data.notes}</p>
-                        </div>
-                    </div>
-                </div>`;
-        }
-
-        // --- Shared Helpers ---
-        function updateVal(idx, val) {
-            getCurrentData().depts[currentModalKey].values[idx] = Number(val);
-            saveDB(); renderDashboard();
-        }
-        function saveDeptNotes(text) { getCurrentData().depts[currentModalKey].notes = text; saveDB(); }
-        function closeModalBtn() { 
-            document.getElementById('modalOverlay').classList.remove('active'); 
-            document.body.classList.remove('modal-open');
-            renderDashboard(); // Update main chart when closing
-        }
-        function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalBtn(); }
-
-        // --- Init Helpers ---
-        function renderMonthSelector() {
-            const sel = document.getElementById('monthSelector'); sel.innerHTML = '';
-            Object.keys(db).sort().reverse().forEach(k => {
-                const opt = document.createElement('option'); opt.value = k; opt.text = k;
-                if(k === currentMonthKey) opt.selected = true; sel.appendChild(opt);
-            });
-        }
-        function changeMonth() { currentMonthKey = document.getElementById('monthSelector').value; renderDashboard(); saveDB(); }
-        function createNewMonth() {
-            const k = prompt("الشهر الجديد (YYYY-MM):", new Date().toISOString().slice(0,7));
-            if(k && !db[k]) { db[k] = { depts: JSON.parse(JSON.stringify(defaultDeptStructure)), texts: {} }; currentMonthKey = k; saveDB(); init(); }
-        }
-        function resetCurrentMonth() { if(confirm("حذف؟")) { delete db[currentMonthKey]; localStorage.removeItem('IMSY_DB_V6'); location.reload(); } }
-        let isEditMode = false;
-        function toggleEditMode() {
-            isEditMode = !isEditMode;
-            const els = document.querySelectorAll('.editable-text');
-            const btn = document.getElementById('editBtn');
-            if (isEditMode) {
-                btn.classList.add('bg-cyan-600');
-                els.forEach(el => { el.contentEditable = true; el.classList.add('editable-active'); el.onblur = function() { const id = this.getAttribute('data-id'); if(!getCurrentData().texts) getCurrentData().texts = {}; getCurrentData().texts[id] = this.innerText; saveDB(); }});
+        // --- 5. TECH & PROD Logic ---
+        function renderTech(data, container, managerHtml) {
+            if (currentView === 'list') {
+                const list = (data.engineers || []).map((e, i) => `
+                    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 flex justify-between items-center mb-2">
+                        <div><h4 class="font-bold text-white text-lg">${e.name||'جديد'}</h4><p class="text-xs text-slate-400">أخطاء: ${e.errorCount||0}</p></div>
+                        <div class="flex gap-2"><button onclick="editSubItem(${i})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">تفاصيل</button><button onclick="deleteSubItem('engineers', ${i})" class="bg-red-600 text-white px-3 py-1 rounded text-sm">حذف</button></div>
+                    </div>`).join('');
+                container.innerHTML = `${managerHtml}<div class="flex justify-between items-center mb-4 no-print"><h3 class="text-cyan-400 font-bold">فريق المهندسين</h3><button onclick="addSubItem('engineers')" class="bg-green-600 text-white px-4 py-2 rounded">+ مهندس</button></div><div class="space-y-2 no-print">${list}</div>`;
             } else {
-                btn.classList.remove('bg-cyan-600'); els.forEach(el => { el.contentEditable = false; el.classList.remove('editable-active'); });
+                const eng = data.engineers[currentSubIndex];
+                const rows = (eng.machines||[]).map((m,i)=>`<tr><td><input class="table-input" value="${m.name}" onblur="updateEngArr(${currentSubIndex},'machines',${i},'name',this.value)"></td><td><input class="table-input" value="${m.notes}" onblur="updateEngArr(${currentSubIndex},'machines',${i},'notes',this.value)"></td><td class="no-print"><button onclick="removeEngArr(${currentSubIndex},'machines',${i})" class="text-red-400">×</button></td></tr>`).join('');
+                container.innerHTML = `<div class="flex items-center gap-4 mb-4 no-print"><button onclick="switchView('list')" class="bg-slate-700 text-white px-3 py-1 rounded">⬅ عودة</button><h3 class="text-white font-bold text-xl">${eng.name}</h3></div><div class="bg-slate-800 p-4 rounded-xl mb-4"><label class="text-xs text-slate-400">الاسم</label><input class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white" value="${eng.name}" onblur="updateSubField('engineers','name',this.value)"></div><div class="bg-slate-900/50 p-4 rounded-xl"><div class="flex justify-between mb-2"><h4>الماكينات</h4><button onclick="addEngArr(${currentSubIndex},'machines')" class="no-print text-xs bg-blue-600 px-2 py-1 rounded text-white">+</button></div><table class="w-full text-sm text-slate-300"><thead><tr><th>الماكينة</th><th>ملاحظات</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
             }
         }
+
+        function renderProd(data, container, managerHtml) {
+            if (currentView === 'list') {
+                const list = (data.workers || []).map((w, i) => `
+                    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 flex justify-between items-center mb-2">
+                        <div><h4 class="font-bold text-white text-lg">${w.name||'جديد'}</h4><p class="text-xs text-orange-400">ماكينة: ${w.machine||'-'}</p></div>
+                        <div class="flex gap-2"><button onclick="editSubItem(${i})" class="bg-orange-600 text-white px-3 py-1 rounded text-sm">سجل</button><button onclick="deleteSubItem('workers', ${i})" class="bg-red-600 text-white px-3 py-1 rounded text-sm">حذف</button></div>
+                    </div>`).join('');
+                container.innerHTML = `${managerHtml}<div class="flex justify-between items-center mb-4 no-print"><h3 class="text-orange-400 font-bold">طاقم الإنتاج</h3><button onclick="addSubItem('workers')" class="bg-green-600 text-white px-4 py-2 rounded">+ عامل</button></div><div class="space-y-2 no-print">${list}</div>`;
+            } else {
+                const w = data.workers[currentSubIndex];
+                container.innerHTML = `<div class="flex items-center gap-4 mb-4 no-print"><button onclick="switchView('list')" class="bg-slate-700 text-white px-3 py-1 rounded">⬅ عودة</button><h3 class="text-white font-bold text-xl">${w.name}</h3></div><div class="grid grid-cols-2 gap-4 bg-slate-800 p-6 rounded-xl"><input class="w-full bg-slate-900 p-2 text-white border border-slate-600 rounded" value="${w.name}" onblur="updateSubField('workers','name',this.value)" placeholder="الاسم"><input class="w-full bg-slate-900 p-2 text-white border border-slate-600 rounded" value="${w.machine||''}" onblur="updateSubField('workers','machine',this.value)" placeholder="الماكينة"></div>`;
+            }
+        }
+
+        // --- 7. STORES ---
+        function renderStore(data, container, managerHtml) {
+            if (!data.inventoryLog) data.inventoryLog = [{ item: '', qty: '', notes: '' }];
+            if (!data.shortageLog) data.shortageLog = [{ item: '', date: '', status: '' }];
+
+            const invRows = data.inventoryLog.map((r, i) => `<tr><td><input class="table-input" value="${r.item}" placeholder="الصنف" onblur="updateStoreArr('inventoryLog', ${i}, 'item', this.value)"></td><td><input class="table-input" value="${r.qty}" placeholder="الكمية" onblur="updateStoreArr('inventoryLog', ${i}, 'qty', this.value)"></td><td><input class="table-input" value="${r.notes}" placeholder="ملاحظات" onblur="updateStoreArr('inventoryLog', ${i}, 'notes', this.value)"></td><td class="no-print"><button onclick="removeStoreArr('inventoryLog', ${i})" class="text-red-400 hover:text-red-300">×</button></td></tr>`).join('');
+            const shortRows = data.shortageLog.map((r, i) => `<tr><td><input class="table-input" value="${r.item}" placeholder="الخامة الناقصة" onblur="updateStoreArr('shortageLog', ${i}, 'item', this.value)"></td><td><input class="table-input" type="date" value="${r.date}" onblur="updateStoreArr('shortageLog', ${i}, 'date', this.value)"></td><td><select class="table-input bg-slate-800" onchange="updateStoreArr('shortageLog', ${i}, 'status', this.value)"><option value="pending" ${r.status==='pending'?'selected':''}>قيد الانتظار</option><option value="ordered" ${r.status==='ordered'?'selected':''}>تم الطلب</option><option value="received" ${r.status==='received'?'selected':''}>تم الاستلام</option></select></td><td class="no-print"><button onclick="removeStoreArr('shortageLog', ${i})" class="text-red-400 hover:text-red-300">×</button></td></tr>`).join('');
+            let sliders = '';
+            data.kpiLabels.forEach((l, i) => { sliders += `<div class="mb-3"><div class="flex justify-between text-xs mb-1 text-slate-300"><span>${l}</span><span>${data.values[i]}%</span></div><input type="range" min="0" max="100" value="${data.values[i]}" oninput="updateVal(${i}, this.value)" style="width:100%; accent-color:${data.color}"></div>`; });
+
+            container.innerHTML = `${managerHtml}<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6"><div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700"><h4 class="font-bold text-purple-400 mb-4">⚙️ مؤشرات أداء المخزن</h4>${sliders}</div><div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700 h-fit"><div class="flex justify-between mb-2 items-center"><h4 class="font-bold text-white">📦 سجل الجرد اليومي</h4><button onclick="addStoreArr('inventoryLog')" class="no-print text-xs bg-purple-600 px-2 py-1 rounded text-white">+ صنف</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-slate-300"><thead><tr class="border-b border-slate-600 text-slate-500"><th>الصنف</th><th>الكمية الحالية</th><th>ملاحظات</th><th class="no-print"></th></tr></thead><tbody>${invRows}</tbody></table></div></div></div><div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700"><div class="flex justify-between mb-2 items-center"><h4 class="font-bold text-red-400">🚨 طلبات النواقص (Shortages)</h4><button onclick="addStoreArr('shortageLog')" class="no-print text-xs bg-red-600 px-2 py-1 rounded text-white">+ طلب</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-slate-300"><thead><tr class="border-b border-slate-600 text-slate-500"><th>الخامة المطلوبة</th><th>تاريخ الطلب</th><th>الحالة</th><th class="no-print"></th></tr></thead><tbody>${shortRows}</tbody></table></div></div>`;
+        }
+
+        // --- 8. GENERIC ---
+        function renderGeneric(data, container, managerHtml) {
+            if (!data.machinesLog) data.machinesLog = [{ name: '', issue: '' }];
+            const rows = data.machinesLog.map((m, i) => `<tr><td><input class="table-input" value="${m.name}" placeholder="الماكينة" onblur="updateGenericArr('machinesLog', ${i}, 'name', this.value)"></td><td><input class="table-input" value="${m.issue}" placeholder="الملاحظة" onblur="updateGenericArr('machinesLog', ${i}, 'issue', this.value)"></td><td class="no-print"><button onclick="removeGenericArr('machinesLog', ${i})" class="text-red-400">×</button></td></tr>`).join('');
+            let sliders = '';
+            data.kpiLabels.forEach((l, i) => { sliders += `<div class="mb-3"><div class="flex justify-between text-xs mb-1 text-slate-300"><span>${l}</span><span>${data.values[i]}%</span></div><input type="range" min="0" max="100" value="${data.values[i]}" oninput="updateVal(${i}, this.value)" style="width:100%; accent-color:${data.color}"></div>`; });
+            container.innerHTML = `${managerHtml}<div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700"><h4>⚙️ المؤشرات</h4>${sliders}</div><div class="bg-slate-900/50 p-6 rounded-xl border border-slate-700"><div class="flex justify-between mb-2"><h4>📋 السجل</h4><button onclick="addGenericArr('machinesLog')" class="no-print text-xs bg-slate-600 px-2 py-1 rounded text-white">+</button></div><table class="w-full text-sm text-slate-300"><thead><tr><th>الماكينة</th><th>التفاصيل</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+        }
+
+        // --- Helper Actions ---
+        function switchView(v) { currentView = v; renderModalContent(); }
+        function addSubItem(type) { 
+            const data = getCurrentData().depts[currentModalKey];
+            if(!data[type]) data[type] = [];
+            data[type].push(type==='engineers'?{name:'جديد',machines:[],errorCount:0}:{name:'جديد',machine:'',errors:0});
+            saveDB(); currentSubIndex = data[type].length - 1; currentView = 'detail'; renderModalContent();
+        }
+        function editSubItem(i) { currentSubIndex = i; currentView = 'detail'; renderModalContent(); }
+        function deleteSubItem(type, i) { if(confirm('حذف؟')) { getCurrentData().depts[currentModalKey][type].splice(i,1); saveDB(); renderModalContent(); } }
+        function updateSubField(type, field, val) { getCurrentData().depts[currentModalKey][type][currentSubIndex][field] = val; saveDB(); }
+        function addEngArr(eIdx, arr) { const e = getCurrentData().depts[currentModalKey].engineers[eIdx]; if(!e[arr]) e[arr]=[]; e[arr].push({}); saveDB(); renderModalContent(); }
+        function updateEngArr(eIdx, arr, iIdx, key, val) { getCurrentData().depts[currentModalKey].engineers[eIdx][arr][iIdx][key] = val; saveDB(); }
+        function removeEngArr(eIdx, arr, iIdx) { getCurrentData().depts[currentModalKey].engineers[eIdx][arr].splice(iIdx,1); saveDB(); renderModalContent(); }
+        
+        function addGenericArr(arr) { const d = getCurrentData().depts[currentModalKey]; if(!d[arr]) d[arr]=[]; d[arr].push({}); saveDB(); renderModalContent(); }
+        function updateGenericArr(arr, idx, key, val) { getCurrentData().depts[currentModalKey][arr][idx][key] = val; saveDB(); }
+        function removeGenericArr(arr, idx) { getCurrentData().depts[currentModalKey][arr].splice(idx, 1); saveDB(); renderModalContent(); }
+        function updateVal(idx, val) { getCurrentData().depts[currentModalKey].values[idx] = Number(val); saveDB(); renderDashboard(); }
+        
+        function addStoreArr(arrName) {
+            const data = getCurrentData().depts['store'];
+            if (arrName === 'inventoryLog') data.inventoryLog.push({ item: '', qty: '', notes: '' });
+            if (arrName === 'shortageLog') data.shortageLog.push({ item: '', date: new Date().toISOString().split('T')[0], status: 'pending' });
+            saveDB(); renderModalContent();
+        }
+        function updateStoreArr(arrName, idx, key, val) { getCurrentData().depts['store'][arrName][idx][key] = val; saveDB(); }
+        function removeStoreArr(arrName, idx) { getCurrentData().depts['store'][arrName].splice(idx, 1); saveDB(); renderModalContent(); }
+
+        // --- Init ---
+        function renderMonthSelector() { const sel=document.getElementById('monthSelector'); sel.innerHTML=''; Object.keys(db).sort().reverse().forEach(k=>{const opt=document.createElement('option'); opt.value=k; opt.text=k; if(k===currentMonthKey) opt.selected=true; sel.appendChild(opt);}); }
+        function changeMonth() { currentMonthKey = document.getElementById('monthSelector').value; renderDashboard(); saveDB(); }
+        function createNewMonth() { const k=prompt("الشهر (YYYY-MM):", new Date().toISOString().slice(0,7)); if(k&&!db[k]){ db[k]={depts:JSON.parse(JSON.stringify(defaultDeptStructure)),texts:{}}; currentMonthKey=k; saveDB(); init(); } }
+        function resetCurrentMonth() { if(confirm("حذف؟")) { delete db[currentMonthKey]; localStorage.removeItem('IMSY_DB_V9_2'); location.reload(); } }
+        let isEditMode = false; function toggleEditMode() { isEditMode=!isEditMode; document.querySelectorAll('.editable-text').forEach(el => { el.contentEditable=isEditMode; el.classList.toggle('editable-active'); el.onblur=function(){const id=this.getAttribute('data-id'); if(!getCurrentData().texts) getCurrentData().texts={}; getCurrentData().texts[id]=this.innerText; saveDB();}}); }
 
         window.addEventListener('load', init);
     </script>
